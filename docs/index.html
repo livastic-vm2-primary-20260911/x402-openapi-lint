@@ -44,12 +44,13 @@ footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#8ca5ae;font-s
 <div class="card"><div class="number">0.02</div><h3>Quoted price in USDC</h3><p>Single paid call, no subscription or API key. Buyer signs payment in their own wallet; our server never holds the buyer's private key.</p><small>20,000 atomic USDC units</small></div>
 <div class="card"><div class="number">64k</div><h3>Max submitted spec</h3><p>YAML or JSON. External references blocked and temp files deleted after processing. Sensitive data should not be submitted.</p><small>Bytes per request</small></div>
 </section>
-<section class="status"><strong>Current public API connection</strong>
-<p id="state">Checking live endpoint status…</p><p id="endpoint">No active server confirmed yet.</p>
-<p><a id="docslink" href="https://github.com/livastic-vm5-primary-20260911/x402-openapi-lint" target="_blank" rel="noopener">Current docs and source ↗</a></p>
+<section class="status"><strong>Permanent API host · Render free tier</strong>
+<p id="state">Permanent Render URL configured. Free instances may sleep and take 50+ seconds to wake; payment settlement remains untested.</p><p id="endpoint">https://vm5-openapi-x402.onrender.com/v1/lint</p>
+<p style="font-size:12px;margin-top:6px"><a href="https://vm5-openapi-x402.onrender.com/openapi.json" target="_blank" rel="noopener">Machine-readable OpenAPI ↗</a> · <a href="https://vm5-openapi-x402.onrender.com/.well-known/x402" target="_blank" rel="noopener">x402 discovery ↗</a></p>
+<p><a id="docslink" href="https://vm5-openapi-x402.onrender.com/v1/docs" target="_blank" rel="noopener">View permanent API docs ↗</a></p>
 </section>
 <section class="box"><h2>Usage for autonomous clients</h2>
-<p>Resolve the current API host using the public live.json file alongside this page. The paid request takes a JSON envelope containing one spec string. Invalid documents are rejected without payment; valid requests return an x402 HTTP 402 challenge until the client supplies a signed authorization.</p>
+<p>Use https://vm5-openapi-x402.onrender.com as the permanent primary API host. For the VM5 backup Quick Tunnel only, resolve the current URL from the public live.json file alongside this page. The paid request takes a JSON envelope containing one spec string. Invalid documents are rejected without payment; valid requests return an x402 HTTP 402 challenge until the client supplies a signed authorization.</p>
 <pre>GET /v1/sample       free, complete lint example
 GET /v1/docs         free, terms, schema and receiving wallet
 POST /v1/lint        paid, 0.02 USDC on Base
@@ -59,7 +60,7 @@ Content-Type: application/json
 
 No PAYMENT-SIGNATURE → HTTP 402 (no money collected)
 Valid signed x402 request → verification/settlement by external facilitator, then structured Redocly findings.</pre>
-<p id="instruction">Machine clients: fetch live.json for apiBase and POST the body to apiBase + /v1/lint. The tunnel may change after server restarts.</p>
+<p id="instruction">Machine clients: fetch live.json for apiBase and POST the body to apiBase + /v1/lint. The VM5 backup tunnel may change after server restarts, but the Render address is stable.</p>
 </section>
 <section class="box"><h2>Safety and payment limitations</h2>
 <p>This is a technical pilot. No live USDC payment or end-to-end settlement was made while developing this service; the quote format and local validator tests are proven but settlement remains unverified. We publish actual receipts only if they can be checked on-chain.</p>
@@ -72,17 +73,17 @@ Valid signed x402 request → verification/settlement by external facilitator, t
 const state=document.getElementById('state');
 const endpoint=document.getElementById('endpoint');
 const docs=document.getElementById('docslink');
+const render='https://vm5-openapi-x402.onrender.com';
+endpoint.textContent=render+'/v1/lint';
+docs.href=render+'/v1/docs';
 try{
-  const r=await fetch('./live.json?ts='+Date.now(),{cache:'no-store'});
-  if(!r.ok)throw Error('Live URL currently unavailable');
-  const info=await r.json();
-  if(typeof info.apiBase!=='string'||!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com\/?$/.test(info.apiBase))throw Error('Current API URL failed validation');
-  endpoint.textContent=info.apiBase+'/v1/lint';
-  docs.href=info.apiBase+'/v1/docs';
-  const health=await fetch(info.apiBase+'/health',{signal:AbortSignal.timeout(6000),cache:'no-store'});
-  const j=await health.json();
-  if(!health.ok||j.service!=='vm5-openapi-x402')throw Error('Current server health unverified');
-  state.textContent='Online · free sample and x402 challenge available. Settlement is untested.';
-}catch(e){state.textContent='Live API connection unverified. Source and free local test instructions remain available.';}
+ const check=await fetch(render+'/health',{signal:AbortSignal.timeout(12000),cache:'no-store'});
+ const d=await check.json();
+ if(check.ok&&d.service==='vm5-openapi-x402'){
+  state.textContent='Render permanent host responding; x402 quote available. Real on-chain settlement untested.';
+ }else throw Error('Unexpected health response');
+}catch{
+ state.textContent='Permanent Render host may be sleeping (free-tier wake-up may take 50+ seconds). Try the API URL again; the backup tunnel can be found in live.json.';
+}
 })();
 </script></body></html>
