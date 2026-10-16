@@ -7,6 +7,7 @@ import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import {parseAndGuardSpec,lintSpec,REDOCLY_VERSION,LIMIT_BYTES} from "./validator.mjs";
+import {makeDiscovery} from "./discovery.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -72,6 +73,10 @@ const routes={
 const payment=paymentMiddleware(routes,resourceServer,undefined,undefined,false);
 
 const app=express();
+// Cloudflare Quick Tunnel connects from local loopback and forwards the public
+// HTTPS scheme. Trust only that local reverse proxy so x402 resource URLs use
+// https:// instead of the internal tunnel http:// origin.
+app.set("trust proxy", "loopback");
 app.disable("x-powered-by");
 const traffic=new Map();
 const MAX_REQUESTS_PER_MINUTE=90;
@@ -106,6 +111,15 @@ app.get("/",(_req,res)=>res.redirect(302,"/v1/docs"));
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+app.get("/openapi.json",(req,res)=>{
+  try{const origin=req.protocol+"://"+req.get("host");res.json(makeDiscovery(origin).spec);}
+  catch{return res.status(503).json({error:"Discovery host not available."});}
+});
+app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
+  try{const origin=req.protocol+"://"+req.get("host");res.json(makeDiscovery(origin).wellKnown);}
+  catch{return res.status(503).json({error:"Discovery host not available."});}
+});
+
 app.options("/v1/lint",(_req,res)=>res.status(204).end());
 
 app.post("/v1/lint",express.json({limit:"85kb",type:["application/json","application/*+json"]}),(req,res,next)=>{

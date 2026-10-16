@@ -86,3 +86,29 @@ test("invalid JSON envelope is unpaid 400",async()=>{
  assert.equal(r.status,400);
  assert.equal(r.headers.get("payment-required"),null);
 });
+
+test("Machine-discoverable OpenAPI metadata exposes one paid POST and accurate 402 schema",async()=>{
+ const r=await fetch(base+"/openapi.json");
+ assert.equal(r.status,200);
+ const spec=await r.json();
+ assert.equal(spec.openapi,"3.1.0");
+ const op=spec.paths["/v1/lint"].post;
+ assert.ok(op);
+ assert.equal(op["x-payment-info"].protocols[0],"x402");
+ assert.equal(op["x-payment-info"].price.amount,"0.02");
+ assert.ok(op.responses["402"]);
+ assert.ok(op.requestBody.content["application/json"].example.spec);
+ assert.equal(spec.paths["/v1/sample"].get.security.length,0);
+ assert.ok(spec.components.securitySchemes.x402Payment);
+ assert.ok(!JSON.stringify(spec).includes("onecursora1@gmail.com"));
+});
+test("Well-known x402 document points at current lint POST route",async()=>{
+ for(const path of ["/.well-known/x402","/.well-known/x402.json"]){
+  const r=await fetch(base+path);
+  assert.equal(r.status,200);
+  const manifest=await r.json();
+  assert.equal(manifest.version,1);
+  assert.ok(manifest.resources.some(s=>s.endsWith("/v1/lint")));
+  assert.equal(manifest.resources.length,1);
+ }
+});
