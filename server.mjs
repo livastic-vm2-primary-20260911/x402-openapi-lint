@@ -15,7 +15,7 @@ const BIND_HOST=process.env.HOST||"127.0.0.1";
 if(!["127.0.0.1","0.0.0.0"].includes(BIND_HOST))throw Error("HOST must be 127.0.0.1 or 0.0.0.0");
 const FACILITATOR_URL=process.env.FACILITATOR_URL||"https://facilitator.openx402.ai";
 const PAY_TO=process.env.PAY_TO||"0x6b01efA0705E91a7aca54271510bf9e594717f34";
-const PRICE="$0.02";
+const PRICE="$0.01";
 const NETWORK="eip155:8453";
 if(!/^0x[0-9a-fA-F]{40}$/.test(PAY_TO))throw Error("PAY_TO must be a valid 20-byte Base recipient.");
 if(!FACILITATOR_URL.startsWith("https://") && !(process.env.NODE_ENV==="test" && /^http:\/\/127\.0\.0\.1:\d+$/.test(FACILITATOR_URL)))throw Error("Facilitator must be HTTPS in production.");
@@ -38,7 +38,7 @@ const documentation={
   paid:{
     method:"POST",
     path:"/v1/lint",
-    priceUSDC:"0.02",
+    priceUSDC:"0.01",
     network:NETWORK,
     asset:"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     recipient:PAY_TO,
@@ -139,7 +139,7 @@ app.post("/v1/lint",express.json({limit:"85kb",type:["application/json","applica
 },payment,async(req,res)=>{
   try{
     const lint=await lintSpec(res.locals.safeSpec);
-    return res.status(200).json({ok:true,chargedUSDC:"0.02",network:NETWORK,redocly:lint,limits:res.locals.stats,guarantee:"Findings based on Redocly 2.64.1 recommended lint. This is not runtime API testing or security assessment."});
+    return res.status(200).json({ok:true,chargedUSDC:"0.01",network:NETWORK,redocly:lint,limits:res.locals.stats,guarantee:"Findings based on Redocly 2.64.1 recommended lint. This is not runtime API testing or security assessment."});
   }catch{
     // Avoid returning secrets, internal filesystem paths or misleading success.
     return res.status(503).json({ok:false,error:"Validator temporarily unavailable. No customer specification or secret material was logged."});

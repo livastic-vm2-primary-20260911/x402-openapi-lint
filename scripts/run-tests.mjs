@@ -32,7 +32,7 @@ const facilitator=http.createServer((req,res)=>{
       const marker=payload?.payload?.signature;
       const valid=data?.x402Version===2 &&
         requirements?.network==="eip155:8453" &&
-        requirements?.amount==="20000" &&
+        requirements?.amount==="10000" &&
         requirements?.payTo?.toLowerCase()==="0x6b01efa0705e91a7aca54271510bf9e594717f34" &&
         marker==="0x"+"11".repeat(65);
       if(req.url==="/verify"){
@@ -40,7 +40,7 @@ const facilitator=http.createServer((req,res)=>{
       }else{
         res.end(JSON.stringify({
           success:Boolean(valid),
-          transaction:"0x"+"22".repeat(32),network:"eip155:8453",amount:valid?"20000":"0",
+          transaction:"0x"+"22".repeat(32),network:"eip155:8453",amount:valid?"10000":"0",
           payer:"0x"+"33".repeat(20),
           errorReason:valid?undefined:"fixture_invalid_marker"
         }));

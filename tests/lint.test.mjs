@@ -65,7 +65,7 @@ test("valid paid request without signature returns Base x402 v2 challenge",async
  const o=JSON.parse(Buffer.from(h,"base64").toString());
  assert.equal(o.x402Version,2);
  assert.equal(o.accepts[0].network,"eip155:8453");
- assert.equal(o.accepts[0].amount,"20000");
+ assert.equal(o.accepts[0].amount,"10000");
  assert.equal(o.accepts[0].payTo.toLowerCase(),"0x6b01efa0705e91a7aca54271510bf9e594717f34");
  assert.equal(o.accepts[0].asset.toLowerCase(),"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913");
 });
@@ -95,7 +95,7 @@ test("Machine-discoverable OpenAPI metadata exposes one paid POST and accurate 4
  const op=spec.paths["/v1/lint"].post;
  assert.ok(op);
  assert.equal(op["x-payment-info"].protocols[0],"x402");
- assert.equal(op["x-payment-info"].price.amount,"0.02");
+ assert.equal(op["x-payment-info"].price.amount,"0.01");
  assert.ok(op.responses["402"]);
  assert.ok(op.requestBody.content["application/json"].example.spec);
  assert.equal(spec.paths["/v1/sample"].get.security.length,0);

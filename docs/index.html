@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="VM5 OpenAPI Lint: self-hosted agent-callable YAML/JSON lint with x402 Base USDC payment, from $0.02 per request.">
+<meta name="description" content="VM5 OpenAPI Lint: self-hosted agent-callable YAML/JSON lint with x402 Base USDC payment, from $0.01 per request.">
 <meta name="theme-color" content="#0b121d"><title>VM5 OpenAPI Lint · x402 paid API pilot</title>
 <style>
 :root{color-scheme:dark;--bg:#0b121d;--card:#14232d;--line:#2e4652;--mint:#6de3c8;--text:#e8f4f0;--muted:#9bb5bd;--gold:#eac080}
@@ -35,13 +35,13 @@ footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#8ca5ae;font-s
 <div class="overline">X402 V2 · BASE USDC · DEVELOPER API PILOT</div>
 <h1>Pay for the <em>lint.</em><br>Keep the code.</h1>
 <p class="lead">Send an OpenAPI 3.x YAML or JSON specification. Get actionable Redocly rule IDs, line/pointer locations, error counts and warnings, without an API key or recurring subscription.</p>
-<div class="pills"><span>0.02 USDC / request</span><span>Base · eip155:8453</span><span>No remote schema imports</span><span>Free sample available</span></div>
+<div class="pills"><span>0.01 USDC / request</span><span>Base · eip155:8453</span><span>No remote schema imports</span><span>Free sample available</span></div>
 <a class="action" href="https://github.com/livastic-vm5-primary-20260911/x402-openapi-lint">See original code & tests ↗</a>
 <p class="meta">AI-assisted software. Independently runnable. Payment settlement has not yet been verified with a real buyer.</p>
 </section>
 <section class="cards">
 <div class="card"><div class="number">21/21</div><h3>Automated smoke tests</h3><p>Offline test facilitator, strict input validation, exact Base USDC challenge fields, sample lint and early rejection checks.</p><small>Not a paid transaction test</small></div>
-<div class="card"><div class="number">0.02</div><h3>Quoted price in USDC</h3><p>Single paid call, no subscription or API key. Buyer signs payment in their own wallet; our server never holds the buyer's private key.</p><small>20,000 atomic USDC units</small></div>
+<div class="card"><div class="number">0.01</div><h3>Quoted price in USDC</h3><p>Single paid call, no subscription or API key. Buyer signs payment in their own wallet; our server never holds the buyer's private key.</p><small>10,000 atomic USDC units</small></div>
 <div class="card"><div class="number">64k</div><h3>Max submitted spec</h3><p>YAML or JSON. External references blocked and temp files deleted after processing. Sensitive data should not be submitted.</p><small>Bytes per request</small></div>
 </section>
 <section class="status"><strong>Permanent API host · Render free tier</strong>
@@ -53,7 +53,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#8ca5ae;font-s
 <p>Use https://vm5-openapi-x402.onrender.com as the permanent primary API host. For the VM5 backup Quick Tunnel only, resolve the current URL from the public live.json file alongside this page. The paid request takes a JSON envelope containing one spec string. Invalid documents are rejected without payment; valid requests return an x402 HTTP 402 challenge until the client supplies a signed authorization.</p>
 <pre>GET /v1/sample       free, complete lint example
 GET /v1/docs         free, terms, schema and receiving wallet
-POST /v1/lint        paid, 0.02 USDC on Base
+POST /v1/lint        paid, 0.01 USDC on Base
 
 Content-Type: application/json
 {"spec":"openapi: 3.0.3\ninfo: {title: Demo, version: '1'}\npaths: {}"}
