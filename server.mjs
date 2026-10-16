@@ -11,6 +11,8 @@ import {makeDiscovery} from "./discovery.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
+const BIND_HOST=process.env.HOST||"127.0.0.1";
+if(!["127.0.0.1","0.0.0.0"].includes(BIND_HOST))throw Error("HOST must be 127.0.0.1 or 0.0.0.0");
 const FACILITATOR_URL=process.env.FACILITATOR_URL||"https://facilitator.openx402.ai";
 const PAY_TO=process.env.PAY_TO||"0x6b01efA0705E91a7aca54271510bf9e594717f34";
 const PRICE="$0.02";
@@ -76,7 +78,7 @@ const app=express();
 // Cloudflare Quick Tunnel connects from local loopback and forwards the public
 // HTTPS scheme. Trust only that local reverse proxy so x402 resource URLs use
 // https:// instead of the internal tunnel http:// origin.
-app.set("trust proxy", "loopback");
+app.set("trust proxy", BIND_HOST==="0.0.0.0" ? 1 : "loopback"); // Render HTTPS reverse proxy, or VM5 loopback tunnel
 app.disable("x-powered-by");
 const traffic=new Map();
 const MAX_REQUESTS_PER_MINUTE=90;
@@ -148,5 +150,5 @@ app.use((err,_req,res,_next)=>{
   const body={ok:false,charged:false,error:err?.type==="entity.too.large"?"Request exceeds 85kb JSON body limit.":"Invalid JSON envelope."};
   res.status(err?.type==="entity.too.large"?413:400).json(body);
 });
-const server=app.listen(PORT,"127.0.0.1",()=>console.log("VM5 x402 OpenAPI lint service listening on port "+PORT+" for Base USDC; actual payment untested."));
+const server=app.listen(PORT,BIND_HOST,()=>console.log("VM5 x402 OpenAPI lint service listening on "+BIND_HOST+":"+PORT+" for Base USDC; actual payment untested."));
 process.on("SIGTERM",()=>server.close(()=>process.exit(0)));
