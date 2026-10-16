@@ -33,7 +33,7 @@ Full offline test with mock facilitator, no keys or USDC spent:
 
     npm test
 
-Latest VM5 result: 15 tests passed, 0 failed. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
+Latest VM5 result: 21 tests passed, 0 failed. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
 
 ## Safe operations
 

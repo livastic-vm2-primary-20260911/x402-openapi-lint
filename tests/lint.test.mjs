@@ -123,3 +123,71 @@ test("Arbitrary Host is rejected from payment discovery",async()=>{
  const {makeDiscovery}=await import("../discovery.mjs");
  assert.throws(()=>makeDiscovery("https://evil.example.com"));
 });
+
+test("LOCAL MOCK ONLY: simulated facilitator verifies and settles valid marker, then returns lint content",async()=>{
+  const challenge=await fetch(base+"/v1/lint",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({spec:example})
+  });
+  assert.equal(challenge.status,402);
+  const quote=JSON.parse(Buffer.from(challenge.headers.get("payment-required"),"base64").toString());
+  const marker="0x"+"11".repeat(65);
+  const fakeSignature=Buffer.from(JSON.stringify({
+    x402Version:2,
+    resource:quote.resource,
+    accepted:quote.accepts[0],
+    payload:{
+      signature:marker,
+      authorization:{
+        from:"0x"+"33".repeat(20),
+        to:quote.accepts[0].payTo,
+        value:quote.accepts[0].amount,
+        validAfter:"0",
+        validBefore:"9999999999",
+        nonce:"0x"+"44".repeat(32)
+      }
+    },
+    extensions:quote.extensions||{}
+  })).toString("base64");
+  const result=await fetch(base+"/v1/lint",{
+    method:"POST",headers:{"Content-Type":"application/json","PAYMENT-SIGNATURE":fakeSignature},
+    body:JSON.stringify({spec:example})
+  });
+  const raw=await result.text();
+  assert.equal(result.status,200,"Mock payment simulated. HTTP "+result.status+" "+raw.slice(0,170));
+  const data=JSON.parse(raw);
+  assert.equal(data.ok,true);
+  assert.equal(data.redocly.errors,0);
+  assert.equal(data.redocly.warnings,2);
+  const payment=responseHeader(result);
+  assert.ok(payment);
+  assert.equal(payment.transaction,"0x"+"22".repeat(32));
+  // The fake tx hash must *never* be treated as a real on-chain settlement.
+  assert.ok(payment.success);
+});
+function responseHeader(r) {
+  const h=r.headers.get("payment-response");
+  return h?JSON.parse(Buffer.from(h,"base64").toString()):null;
+}
+
+test("LOCAL MOCK ONLY: wrong marker is rejected and no lint report is returned",async()=>{
+  const unpaid=await fetch(base+"/v1/lint",{
+    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({spec:example})
+  });
+  assert.equal(unpaid.status,402);
+  const quote=JSON.parse(Buffer.from(unpaid.headers.get("payment-required"),"base64").toString());
+  const forged=Buffer.from(JSON.stringify({
+    x402Version:2,
+    resource:quote.resource,
+    accepted:quote.accepts[0],
+    payload:{
+      signature:"0x"+"55".repeat(65),
+      authorization:{from:"0x"+"33".repeat(20),to:quote.accepts[0].payTo,value:quote.accepts[0].amount,validAfter:"0",validBefore:"9999999999",nonce:"0x"+"44".repeat(32)}
+    },
+    extensions:quote.extensions||{}
+  })).toString("base64");
+  const result=await fetch(base+"/v1/lint",{
+    method:"POST",headers:{"Content-Type":"application/json","PAYMENT-SIGNATURE":forged},body:JSON.stringify({spec:example})
+  });
+  assert.equal(result.status,402);
+  assert.equal(result.headers.get("payment-response"),null);
+});

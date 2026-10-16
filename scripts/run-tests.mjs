@@ -20,7 +20,33 @@ const facilitator=http.createServer((req,res)=>{
       kinds:[{x402Version:2,scheme:"exact",network:"eip155:8453",extra:{name:"USD Coin",version:"2",asset:"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",assetTransferMethod:"eip3009"}}],
       extensions:["discovery"],signers:{"eip155:*":["0x0000000000000000000000000000000000000000"]}
     }));
-  }else {res.statusCode=503;res.end(JSON.stringify({error:"Fixture cannot verify or settle payments. Testing the challenge only."}));}
+  }else if(req.method==="POST" && (req.url==="/verify"||req.url==="/settle")){
+    // TEST FIXTURE ONLY. Strict fake test marker, localhost, no on-chain transaction.
+    const chunks=[];
+    req.on("data",chunk=>chunks.push(chunk));
+    req.on("end",()=>{
+      let data;
+      try{data=JSON.parse(Buffer.concat(chunks).toString("utf8"));}catch{data=null;}
+      const payload=data?.paymentPayload;
+      const requirements=data?.paymentRequirements;
+      const marker=payload?.payload?.signature;
+      const valid=data?.x402Version===2 &&
+        requirements?.network==="eip155:8453" &&
+        requirements?.amount==="20000" &&
+        requirements?.payTo?.toLowerCase()==="0x6b01efa0705e91a7aca54271510bf9e594717f34" &&
+        marker==="0x"+"11".repeat(65);
+      if(req.url==="/verify"){
+        res.end(JSON.stringify({isValid:Boolean(valid),invalidReason:valid?undefined:"fixture_invalid_marker",payer:"0x"+"33".repeat(20)}));
+      }else{
+        res.end(JSON.stringify({
+          success:Boolean(valid),
+          transaction:"0x"+"22".repeat(32),network:"eip155:8453",amount:valid?"20000":"0",
+          payer:"0x"+"33".repeat(20),
+          errorReason:valid?undefined:"fixture_invalid_marker"
+        }));
+      }
+    });
+  }else {res.statusCode=503;res.end(JSON.stringify({error:"Unsupported test fixture route."}));}
 });
 facilitator.listen(0,"127.0.0.1");
 await once(facilitator,"listening");
