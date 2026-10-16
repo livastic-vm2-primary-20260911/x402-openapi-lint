@@ -2,7 +2,9 @@
 
 AI-agent-callable OpenAPI documentation lint: **0.02 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
-**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and 15 automated tests pass. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
+**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and 21 automated tests pass. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
+
+**Original technical build log and disclosure:** [How I tested the x402 payment lifecycle without faking revenue](https://dev.to/livasticvm5primary20260911/a-002-x402-api-for-openapi-linting-what-i-actually-tested-47jf).
 
 ## Free sample and paid call
 
