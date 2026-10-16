@@ -1,0 +1,167 @@
+openapi: 3.0.3
+info:
+  title: JSONPlaceholder Posts API — independently verified documentation example
+  version: 1.0.0
+  description: |
+    Independent OpenAPI 3.0 example authored by VM5 Delivery Lab. Covers a
+    bounded subset of JSONPlaceholder's public demo API, not an official spec.
+
+    The API is intentionally simulated: POST /posts returns a created-looking
+    response but does not permanently save the record. Do not use this endpoint
+    as proof of storage or payment processing.
+
+    Status codes and example fields were checked on 2026-10-17 KST against
+    public test endpoints (GET /posts, GET /posts/1, GET /posts/999999,
+    and a harmless simulated POST /posts). The full list has 100 rows at
+    that observation time. Behavior is not guaranteed to remain unchanged.
+
+    This specification is independently authored, is not endorsed by
+    JSONPlaceholder, and makes no claim of a formal security review.
+  license:
+    name: MIT (this independently authored example only)
+    url: https://opensource.org/licenses/MIT
+  contact:
+    name: VM5 Delivery Lab — scoped API documentation
+    url: https://livastic-vm5-primary-20260911.github.io/vm5-delivery-lab/
+  x-source-documentation: https://jsonplaceholder.typicode.com/
+  x-observed-at: "2026-10-17"
+  x-ai-disclosure: "AI-assisted document, validated against real public mock API responses"
+servers:
+  - url: https://jsonplaceholder.typicode.com
+    description: JSONPlaceholder public fake REST API (no account or key required)
+tags:
+  - name: Posts
+    description: Simulated blog-post objects for demonstration and QA.
+security: []
+paths:
+  /posts:
+    get:
+      tags: [Posts]
+      operationId: listPosts
+      summary: List post records, optionally filtered by user ID
+      description: |
+        Fetches an array of posts. The public guide documents userId filtering.
+        At the time of verification, the unfiltered list contained 100 posts.
+      parameters:
+        - in: query
+          name: userId
+          required: false
+          description: Return records associated with this user ID.
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        "200":
+          description: A JSON array of post records.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+              examples:
+                oneRecord:
+                  summary: First record (truncated list)
+                  value:
+                    - userId: 1
+                      id: 1
+                      title: "sunt aut facere repellat provident occaecati excepturi optio reprehenderit"
+                      body: "quia et suscipit"
+    post:
+      tags: [Posts]
+      operationId: simulateCreatePost
+      summary: Simulate creating a post without permanent storage
+      description: |
+        Accepts a post-like JSON body and returns HTTP 201 with a fabricated
+        server-generated ID; no persistent record is created. This is a mock
+        endpoint, not a durable write.
+      requestBody:
+        required: true
+        description: New simulated post fields, excluding server-generated ID.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCreate"
+            example:
+              title: "VM5 sample"
+              body: "Verified mock API"
+              userId: 1
+      responses:
+        "201":
+          description: |
+            Creation simulation was accepted; ID is generated for the mock
+            response but the resource is not saved on the server.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+              example:
+                title: "VM5 sample"
+                body: "Verified mock API"
+                userId: 1
+                id: 101
+  /posts/{id}:
+    get:
+      tags: [Posts]
+      operationId: getPost
+      summary: Retrieve a single post by ID
+      description: Returns a post record, or 404 for an unknown ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Positive numeric post ID.
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        "200":
+          description: A post record exists at this ID.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+              example:
+                userId: 1
+                id: 1
+                title: "sunt aut facere repellat provident occaecati excepturi optio reprehenderit"
+                body: "quia et suscipit"
+        "404":
+          description: No post with that ID was found. Public mock returns an empty JSON object.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                maxProperties: 0
+              example: {}
+components:
+  schemas:
+    PostCreate:
+      type: object
+      additionalProperties: true
+      description: Fields needed by the mock create endpoint.
+      required: [userId, title, body]
+      properties:
+        userId:
+          type: integer
+          minimum: 1
+          example: 1
+        title:
+          type: string
+          example: "VM5 sample"
+        body:
+          type: string
+          example: "Verified mock API"
+    Post:
+      allOf:
+        - $ref: "#/components/schemas/PostCreate"
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: integer
+              minimum: 1
+              example: 1
