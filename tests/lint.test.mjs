@@ -191,3 +191,12 @@ test("LOCAL MOCK ONLY: wrong marker is rejected and no lint report is returned",
   assert.equal(result.status,402);
   assert.equal(result.headers.get("payment-response"),null);
 });
+
+test("402 Index public domain proof serves only the stored SHA-256 hash, never the secret token",async()=>{
+  const r=await fetch(base+"/.well-known/402index-verify.txt");
+  assert.equal(r.status,200);
+  const text=(await r.text()).trim();
+  assert.match(text,/^[0-9a-f]{64}$/);
+  const expected=fs.readFileSync(new URL("../verification/402index-verify.txt",import.meta.url),"utf8").trim();
+  assert.equal(text,expected);
+});

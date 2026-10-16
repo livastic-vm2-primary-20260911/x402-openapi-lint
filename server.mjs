@@ -110,6 +110,11 @@ app.use((_req,res,next)=>{
   next();
 });
 app.get("/",(_req,res)=>res.redirect(302,"/v1/docs"));
+app.get("/.well-known/402index-verify.txt",(_req,res)=>{
+  const hash=fs.readFileSync(path.resolve(DIR,"verification/402index-verify.txt"),"utf8").trim();
+  if(!/^[0-9a-f]{64}$/.test(hash))return res.status(503).type("text/plain").send("verification file invalid");
+  return res.type("text/plain").send(hash);
+});
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
