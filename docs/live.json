@@ -1,5 +1,6 @@
 {
-  "apiBase": null,
-  "checkedAtUTC": null,
-  "status": "not_yet_public"
+  "apiBase": "https://led-arctic-ethical-screw.trycloudflare.com",
+  "status": "reachable",
+  "checkedAtUTC": "2026-10-16T18:05:28.896604+00:00",
+  "note": "x402 payment signature and settlement are not live-verified"
 }
