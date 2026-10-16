@@ -112,3 +112,14 @@ test("Well-known x402 document points at current lint POST route",async()=>{
   assert.equal(manifest.resources.length,1);
  }
 });
+
+test("Stable Render public origin produces a valid discovery document",async()=>{
+ const {makeDiscovery}=await import("../discovery.mjs");
+ const manifest=makeDiscovery("https://vm5-openapi-x402.onrender.com");
+ assert.equal(manifest.spec.servers[0].url,"https://vm5-openapi-x402.onrender.com");
+ assert.equal(manifest.wellKnown.resources[0],"https://vm5-openapi-x402.onrender.com/v1/lint");
+});
+test("Arbitrary Host is rejected from payment discovery",async()=>{
+ const {makeDiscovery}=await import("../discovery.mjs");
+ assert.throws(()=>makeDiscovery("https://evil.example.com"));
+});

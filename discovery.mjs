@@ -1,7 +1,7 @@
 // Machine-readable origin-specific discovery for x402scan and standard OpenAPI clients.
 // Read-only, no remote calls, never exposes customer docs or platform credentials.
 export function makeDiscovery(origin) {
-  if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin) && !/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)){
+  if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin) && origin!=="https://vm5-openapi-x402.onrender.com" && !/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)){
     throw Error("Unexpected public origin");
   }
   const endpoint=origin+"/v1/lint";
