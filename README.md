@@ -2,7 +2,7 @@
 
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
-**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and 21 automated tests pass. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
+**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and 22 automated tests pass. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
 
 **Original technical build log and disclosure:** [How I tested the x402 payment lifecycle without faking revenue](https://dev.to/livasticvm5primary20260911/a-002-x402-api-for-openapi-linting-what-i-actually-tested-47jf).
 
@@ -18,6 +18,8 @@ AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocat
 A buyer who accepts the amount signs an EIP-3009 authorization in its **own** wallet and resends the request with PAYMENT-SIGNATURE. The service delegates verification and settlement to https://facilitator.openx402.ai; VM5 does not receive or use the buyer's private key.
 
 Successful paid invocation returns a Redocly findings report. Bad YAML, external references, oversized input and invalid JSON envelope get 400 or 413 **before** reaching the paywall. A syntactically valid but low-quality OpenAPI specification may yield Redocly lint errors; documenting those defects is the service being sold. No secret specs or confidential data should be submitted.
+
+**Additional zero-fee discovery:** Registered with Agent402 (seller is listed, routable with one paid route) and [402 Index](https://402index.io/api/v1/services/2f13b34e-d85b-43d9-b2d4-d3b4047641fc) (HTTP 201 registration and verified domain claim, public listing active/healthy). x402scan remains the original index at https://www.x402scan.com/server/7674c5b5-4645-4f5a-9b08-d7b8af61fd21. Being indexed does **not** prove a sale or real settlement.
 
 ## Run and test
 
@@ -35,7 +37,7 @@ Full offline test with mock facilitator, no keys or USDC spent:
 
     npm test
 
-Latest VM5 result: 21 tests passed, 0 failed. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
+Latest VM5 result: 22 tests passed, 0 failed. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
 
 ## Safe operations
 

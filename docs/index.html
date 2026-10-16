@@ -40,7 +40,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#8ca5ae;font-s
 <p class="meta">AI-assisted software. Independently runnable. Payment settlement has not yet been verified with a real buyer.</p>
 </section>
 <section class="cards">
-<div class="card"><div class="number">21/21</div><h3>Automated smoke tests</h3><p>Offline test facilitator, strict input validation, exact Base USDC challenge fields, sample lint and early rejection checks.</p><small>Not a paid transaction test</small></div>
+<div class="card"><div class="number">22/22</div><h3>Automated smoke tests</h3><p>Offline test facilitator, strict input validation, exact Base USDC challenge fields, sample lint and early rejection checks.</p><small>Not a paid transaction test</small></div>
 <div class="card"><div class="number">0.01</div><h3>Quoted price in USDC</h3><p>Single paid call, no subscription or API key. Buyer signs payment in their own wallet; our server never holds the buyer's private key.</p><small>10,000 atomic USDC units</small></div>
 <div class="card"><div class="number">64k</div><h3>Max submitted spec</h3><p>YAML or JSON. External references blocked and temp files deleted after processing. Sensitive data should not be submitted.</p><small>Bytes per request</small></div>
 </section>
@@ -49,6 +49,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 45px;color:#8ca5ae;font-s
 <p style="font-size:12px;margin-top:6px"><a href="https://vm5-openapi-x402.onrender.com/openapi.json" target="_blank" rel="noopener">Machine-readable OpenAPI ↗</a> · <a href="https://vm5-openapi-x402.onrender.com/.well-known/x402" target="_blank" rel="noopener">x402 discovery ↗</a></p>
 <p><a id="docslink" href="https://vm5-openapi-x402.onrender.com/v1/docs" target="_blank" rel="noopener">View permanent API docs ↗</a></p>
 </section>
+<p class="meta">Discover it: <a href="https://www.x402scan.com/server/7674c5b5-4645-4f5a-9b08-d7b8af61fd21">x402scan ↗</a> · <a href="https://agent402.tools/marketplace">Agent402 ↗</a> · <a href="https://402index.io/api/v1/services/2f13b34e-d85b-43d9-b2d4-d3b4047641fc">402 Index ↗</a>. No real paid order has been verified.</p>
 <section class="box"><h2>Usage for autonomous clients</h2>
 <p>Use https://vm5-openapi-x402.onrender.com as the permanent primary API host. For the VM5 backup Quick Tunnel only, resolve the current URL from the public live.json file alongside this page. The paid request takes a JSON envelope containing one spec string. Invalid documents are rejected without payment; valid requests return an x402 HTTP 402 challenge until the client supplies a signed authorization.</p>
 <pre>GET /v1/sample       free, complete lint example
