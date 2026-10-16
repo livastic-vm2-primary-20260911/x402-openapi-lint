@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep VM5 x402 public API locator fresh
+
+[Timer]
+OnBootSec=95s
+OnUnitInactiveSec=3min
+Unit=vm5-x402-live-link.service
+
+[Install]
+WantedBy=timers.target

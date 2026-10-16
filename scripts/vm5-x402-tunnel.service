@@ -1,0 +1,18 @@
+[Unit]
+Description=VM5 OpenAPI x402 public HTTPS Quick Tunnel
+After=network-online.target vm5-x402-openapi.service
+Wants=network-online.target
+Requires=vm5-x402-openapi.service
+
+[Service]
+Type=simple
+User=gptagent
+Group=gptagent
+WorkingDirectory=/srv/multi-vm-agent/workspace/make_money
+ExecStart=/srv/multi-vm-agent/workspace/make_money/tools/cloudflare/cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8736
+Restart=always
+RestartSec=7
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

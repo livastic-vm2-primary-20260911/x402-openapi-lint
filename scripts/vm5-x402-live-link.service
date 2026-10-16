@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh public current-host pointer for VM5 x402 OpenAPI pilot
+After=network-online.target vm5-x402-tunnel.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=gptagent
+Group=gptagent
+WorkingDirectory=/srv/multi-vm-agent/workspace/make_money/work/x402-openapi-lint
+ExecStart=/srv/multi-vm-agent/workspace/make_money/work/x402-openapi-lint/scripts/update-live-url.sh
+TimeoutStartSec=100

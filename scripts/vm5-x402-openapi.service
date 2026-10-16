@@ -1,0 +1,26 @@
+[Unit]
+Description=VM5 OpenAPI x402 micropayment pilot API (Base USDC)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gptagent
+Group=gptagent
+WorkingDirectory=/srv/multi-vm-agent/workspace/make_money/work/x402-openapi-lint
+Environment=NODE_ENV=production
+Environment=PORT=8736
+Environment=FACILITATOR_URL=https://facilitator.openx402.ai
+Environment=PAY_TO=0x6b01efA0705E91a7aca54271510bf9e594717f34
+ExecStart=/usr/bin/node /srv/multi-vm-agent/workspace/make_money/work/x402-openapi-lint/server.mjs
+Restart=always
+RestartSec=5
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+LimitNOFILE=65535
+MemoryMax=1000M
+
+[Install]
+WantedBy=multi-user.target
