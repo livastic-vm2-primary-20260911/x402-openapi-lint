@@ -157,6 +157,8 @@ test("Machine-discoverable OpenAPI metadata exposes one paid POST and accurate 4
  assert.equal(spec.paths["/v1/sample"].get.security.length,0);
  assert.ok(spec.paths["/v1/x402-template"].get);
  assert.equal(spec.paths["/v1/x402-template"].get["x-payment-info"].price.amount,"0.01");
+ assert.ok(spec.paths["/v1/base-usdc-receipt"].get);
+ assert.equal(spec.paths["/v1/base-usdc-receipt"].get["x-payment-info"].price.amount,"0.005");
  assert.ok(spec.components.securitySchemes.x402Payment);
  assert.ok(!JSON.stringify(spec).includes("onecursora1@gmail.com"));
 });
@@ -167,7 +169,8 @@ test("Well-known x402 document points at current lint POST route",async()=>{
   const manifest=await r.json();
   assert.equal(manifest.version,1);
   assert.ok(manifest.resources.some(s=>s.endsWith("/v1/lint")));
-  assert.equal(manifest.resources.length,2);
+  assert.equal(manifest.resources.length,3);
+  assert.ok(manifest.resources.some(s=>s.endsWith("/v1/base-usdc-receipt")));
   assert.ok(manifest.resources.some(s=>s.endsWith("/v1/x402-template")));
  }
 });

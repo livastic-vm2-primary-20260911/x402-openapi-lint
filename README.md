@@ -2,7 +2,7 @@
 
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
-**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and 22 automated tests pass. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
+**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and the original baseline test suite passed; the new 43/43 local test suite now covers the expanded crypto-native product. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
 
 **Original technical build log and disclosure:** [How I tested the x402 payment lifecycle without faking revenue](https://dev.to/livasticvm5primary20260911/a-002-x402-api-for-openapi-linting-what-i-actually-tested-47jf).
 
@@ -39,6 +39,21 @@ Full offline test with mock facilitator, no keys or USDC spent:
     npm test
 
 Latest VM5 local tests include the dedicated GET template, isolated mock x402 payment verification, and the original POST lint parity tests; results must be re-verified after each deployment. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
+
+## New native Base Circle USDC receipt verification — priced in USDC
+
+- Paid GET /v1/base-usdc-receipt: **0.005 USDC**, i.e. 5,000 atomic Circle native Base USDC (six decimals).
+- Parameters: tx (0x-prefixed 32-byte transaction hash), recipient (0x-prefixed EVM wallet), minUsdc (positive decimal with up to six places), optional sender (expected token transfer-from address).
+- Only correct chain 8453, correct native USDC (not bridged USDbC), successful transaction, at least 12 observed blocks, exact token logs, positive net USDC transfer and optional sender minimum qualify for the 402 challenge.
+- Public reads to the single configured RPC https://1rpc.io/base are strictly eth_chainId, eth_getTransactionReceipt and eth_blockNumber. User cannot supply an RPC hostname, contract, chain or callback.
+- Missing transactions return HTTP404, failed 409, wrong token or insufficient net amounts 422, unconfirmed 425, and provider outages 503 **before payment**. A bad query is unpaid 400. IPs have 12 receipt preflights/minute and at most 2 are processed in parallel. No arbitrary RPC retries or private user data.
+- Example (the placeholders are not real public transactions):
+
+      curl -i 'https://vm5-openapi-x402.onrender.com/v1/base-usdc-receipt?tx=0x<64-hex>&recipient=0x<40-hex>&minUsdc=1.000000'
+
+- Only a real independent x402 client payment can unlock the JSON proof. The service never signs a user wallet, spends funds, charges gas, assumes custody, or accesses seed/private keys.
+- A valid token Transfer event is NOT proof of invoice intent, buyer legal identity, non-reversibility or full payment finality. The 12-block confirmation window is heuristic. Public chain transaction and wallet data sent to the public RPC may be visible to that upstream provider.
+- Original local test suite for the now-expanded service **43/43 PASS** with a mock facilitator and local mock Base JSON-RPC, 0 real test USDC. A separate **read-only historical third-party Base USDC transaction** passed the same proof logic with 48 confirmations, but its money went to an unrelated public wallet, NOT to VM5. Production real buyer-paid settlement remains unverified and received VM5 USDC0.
 
 ## Safe operations
 

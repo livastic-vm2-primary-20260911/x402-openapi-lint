@@ -8,6 +8,7 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import {parseAndGuardSpec,lintSpec,REDOCLY_VERSION,LIMIT_BYTES} from "./validator.mjs";
 import {makeDiscovery} from "./discovery.mjs";
+import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -54,6 +55,18 @@ const documentation={
     payment:"x402 v2 EIP-3009 Base USDC signature",
     facilitator:FACILITATOR_URL
   },
+  paidReceipt:{
+    method:"GET",path:"/v1/base-usdc-receipt",
+    priceUSDC:"0.005",network:NETWORK,
+    query:{
+      tx:"0x-prefixed 32-byte Base transaction hash",
+      recipient:"0x-prefixed 20-byte Base wallet address",
+      minUsdc:"positive decimal up to 6 fractional places",
+      sender:"optional expected external USDC transfer-from address"
+    },
+    purpose:"Read-only Circle native Base USDC receipt proof with 12-block confirmation gate, net token Transfer logs, strict optional sender, exact integer decimals.",
+    caveat:"Successful Transfer log is not invoice settlement, buyer intent, a security audit or proof of account ownership. Invalid/failed/unconfirmed receipts are rejected BEFORE payment."
+  },
   paidTemplate:{
     method:"GET",path:"/v1/x402-template",priceUSDC:"0.01",network:NETWORK,
     purpose:"Get a ready-to-adapt, independently authored x402 v2 OpenAPI 3.0.3 template and Redocly validation report; no customer spec submitted.",
@@ -80,6 +93,11 @@ const routes={
       inputSchema:{type:"object",properties:{spec:{type:"string",description:"OpenAPI YAML/JSON (no external $ref)" }},required:["spec"]},
       output:{example:{valid:true,errors:0,warnings:1,lintVersion:REDOCLY_VERSION,findings:[{ruleId:"operation-4xx-response",severity:"warn",message:"Operation must have at least one 4XX response."}]}}
     })
+  },
+  "GET /v1/base-usdc-receipt":{
+    accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
+    description:"Validate a finalized-enough Base native Circle USDC transfer receipt with strict tx, wallet, optional sender and min threshold. A failed or unconfirmed transfer does not reach payment.",
+    mimeType:"application/json"
   },
   "GET /v1/x402-template":{
     accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
@@ -133,6 +151,43 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+let inFlightUSDCReads=0;
+const pendingUSDCByIp=new Map();
+app.get("/v1/base-usdc-receipt",async(req,res,next)=>{
+  // Free RPC preflight is deliberately bounded so unauthenticated users
+  // cannot turn the x402 seller into a public Base RPC amplification proxy.
+  const now=Date.now();
+  const who=req.ip;
+  const prev=pendingUSDCByIp.get(who);
+  const item=(!prev||now-prev.started>60000)?{started:now,count:0}:prev;
+  item.count++;
+  pendingUSDCByIp.set(who,item);
+  if(pendingUSDCByIp.size>10000)
+    for(const [ip,entry] of pendingUSDCByIp)
+      if(now-entry.started>60000)pendingUSDCByIp.delete(ip);
+  if(item.count>12)
+    return res.status(429).json({ok:false,charged:false,error:"Base receipt read rate limit; retry later."});
+  if(inFlightUSDCReads>=2)
+    return res.status(503).json({ok:false,charged:false,error:"Base receipt reader busy; no payment accepted."});
+
+  const parsed=validateReceiptQuery(req.query);
+  if(!parsed.ok)return res.status(400).json({ok:false,charged:false,error:parsed.error});
+  inFlightUSDCReads++;
+  try{
+    const result=await preflightBaseUSDCReceipt(parsed.value);
+    if(!result.ok)return res.status(result.httpStatus).json({ok:false,charged:false,error:result.error});
+    res.locals.usdcReceiptProof=result.proof;
+    next();
+  }catch{
+    return res.status(503).json({ok:false,charged:false,error:"Base receipt verifier or read-only chain source temporarily unavailable. No payment requested."});
+  }finally{
+    inFlightUSDCReads=Math.max(0,inFlightUSDCReads-1);
+  }
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.usdcReceiptProof,
+  chargedUSDC:"0.005",
+  payment:"x402 v2 exact Base Circle native USDC. Real independent payment settlement NOT yet demonstrated on production."
+}));
 app.get("/v1/x402-template",payment,(_req,res)=>res.status(200).json({
   ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
   kind:"x402_v2_openapi_starter",templateFormat:"YAML",openapiTemplate:paymentTemplate,

@@ -13,6 +13,53 @@ async function freePort() {
   return port;
 }
 
+const FIXTURE_TX="0x"+"aa".repeat(32);
+const FIXTURE_SENDER="0x"+"33".repeat(20);
+const FIXTURE_RECEIVER="0x"+"44".repeat(20);
+const transferTopic="0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const topicAddress=x=>"0x"+x.slice(2).toLowerCase().padStart(64,"0");
+const fixtureUSDCEvent=(from,to,amount)=>({
+  address:"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  topics:[transferTopic,topicAddress(from),topicAddress(to)],
+  data:"0x"+BigInt(amount).toString(16).padStart(64,"0")
+});
+const receiptRpc=http.createServer((req,res)=>{
+  res.setHeader("Content-Type","application/json");
+  if(req.method!=="POST"){res.statusCode=405;res.end(JSON.stringify({error:"GET disallowed"}));return;}
+  const pieces=[];
+  req.on("data",x=>pieces.push(x));
+  req.on("end",()=>{
+    let d;
+    try { d=JSON.parse(Buffer.concat(pieces).toString()); } catch {d=null;}
+    const method=d?.method;
+    const allowed=["eth_chainId","eth_blockNumber","eth_getTransactionReceipt"];
+    if(!allowed.includes(method)){res.statusCode=403;res.end(JSON.stringify({error:"Unapproved RPC"}));return;}
+    let result;
+    if(method==="eth_chainId")result="0x2105";
+    else if(method==="eth_blockNumber")result="0x111";
+    else {
+      const tx=d?.params?.[0];
+      if(tx===FIXTURE_TX){
+        result={transactionHash:tx,status:"0x1",blockNumber:"0x100",
+          logs:[fixtureUSDCEvent(FIXTURE_SENDER,FIXTURE_RECEIVER,4_000_000)]};
+      }else if(tx==="0x"+"bb".repeat(32)){result=null;}
+      else if(tx==="0x"+"cc".repeat(32)){
+        result={transactionHash:tx,status:"0x0",blockNumber:"0x100",logs:[]};
+      }else if(tx==="0x"+"dd".repeat(32)){
+        result={transactionHash:tx,status:"0x1",blockNumber:"0x100",logs:[{
+          ...fixtureUSDCEvent(FIXTURE_SENDER,FIXTURE_RECEIVER,4_000_000),
+          address:"0x"+"dd".repeat(20)
+        }]};
+      }else if(tx==="0x"+"ee".repeat(32)){
+        result={transactionHash:tx,status:"0x1",blockNumber:"0x111",
+          logs:[fixtureUSDCEvent(FIXTURE_SENDER,FIXTURE_RECEIVER,4_000_000)]};
+      }else{result=null;}
+    }
+    res.end(JSON.stringify({jsonrpc:"2.0",id:1,result}));
+  });
+});
+receiptRpc.listen(0,"127.0.0.1");
+await once(receiptRpc,"listening");
 const facilitator=http.createServer((req,res)=>{
   res.setHeader("Content-Type","application/json");
   if(req.method==="GET" && req.url==="/supported"){
@@ -32,7 +79,7 @@ const facilitator=http.createServer((req,res)=>{
       const marker=payload?.payload?.signature;
       const valid=data?.x402Version===2 &&
         requirements?.network==="eip155:8453" &&
-        requirements?.amount==="10000" &&
+        (requirements?.amount==="10000" || requirements?.amount==="5000") &&
         requirements?.payTo?.toLowerCase()==="0x6b01efa0705e91a7aca54271510bf9e594717f34" &&
         marker==="0x"+"11".repeat(65);
       if(req.url==="/verify"){
@@ -40,7 +87,7 @@ const facilitator=http.createServer((req,res)=>{
       }else{
         res.end(JSON.stringify({
           success:Boolean(valid),
-          transaction:"0x"+"22".repeat(32),network:"eip155:8453",amount:valid?"10000":"0",
+          transaction:"0x"+"22".repeat(32),network:"eip155:8453",amount:valid?requirements.amount:"0",
           payer:"0x"+"33".repeat(20),
           errorReason:valid?undefined:"fixture_invalid_marker"
         }));
@@ -53,7 +100,7 @@ await once(facilitator,"listening");
 const port=await freePort();
 const mockUrl="http://127.0.0.1:"+facilitator.address().port;
 const url="http://127.0.0.1:"+port;
-const env={...process.env,PORT:String(port),FACILITATOR_URL:mockUrl,NODE_ENV:"test",TEST_URL:url};
+const env={...process.env,PORT:String(port),FACILITATOR_URL:mockUrl,NODE_ENV:"test",TEST_URL:url,BASE_RPC_URL:"http://127.0.0.1:"+receiptRpc.address().port};
 const backend=spawn(process.execPath,["server.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:["ignore","pipe","pipe"]});
 let backendLog="";
 backend.stdout.on("data",x=>backendLog+=x.toString());
@@ -72,12 +119,13 @@ async function ready() {
 let code=1;
 try{
   await ready();
-  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
+  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs","tests/base-usdc-receipt.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
   const [exit]=await once(tests,"close");
   code=exit??1;
 } catch(e){console.error(e.stack||e);code=1;}
 finally{
   backend.kill("SIGTERM");
   facilitator.close();
+  receiptRpc.close();
 }
 process.exitCode=code;

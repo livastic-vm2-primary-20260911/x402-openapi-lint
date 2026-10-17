@@ -6,12 +6,17 @@ export function makeDiscovery(origin) {
   }
   const endpoint=origin+"/v1/lint";
   const templateEndpoint=origin+"/v1/x402-template";
+  const receiptEndpoint=origin+"/v1/base-usdc-receipt";
   const payInfo={
     protocols:["x402"],
     price:{mode:"fixed",currency:"USD",amount:"0.01"},
     network:"eip155:8453",
     asset:"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     payTo:"0x6b01efA0705E91a7aca54271510bf9e594717f34"
+  };
+  const receiptPayInfo={
+    ...payInfo,
+    price:{mode:"fixed",currency:"USD",amount:"0.005"}
   };
   const spec={
     openapi:"3.1.0",
@@ -37,6 +42,29 @@ export function makeDiscovery(origin) {
       "/health":{get:{summary:"Free health check",operationId:"health",security:[],responses:{"200":{description:"Current service health."}}}},
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
+      "/v1/base-usdc-receipt":{get:{
+        summary:"Verify Base Circle USDC transaction receipt for 0.005 USDC",
+        operationId:"verifyBaseUSDCReceipt",
+        description:"A read-only paid JSON proof for a successful confirmed Base native Circle USDC ERC20 Transfer, requiring 12 observed blocks, positive NET tokens received, optional exact external transfer sender and integer-safe minimum threshold. Public input errors, missing, unsuccessful and unconfirmed transfers are rejected without a 402 charge. No invoice intent or buyer identity verification; no wallet signatures performed by the service.",
+        security:[{x402Payment:[]}],
+        "x-payment-info":receiptPayInfo,
+        parameters:[
+          {name:"tx",in:"query",required:true,description:"0x-prefixed 32-byte transaction hash on Base",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{64}$"}},
+          {name:"recipient",in:"query",required:true,description:"Expected native USDC recipient wallet",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$"}},
+          {name:"minUsdc",in:"query",required:true,description:"USDC threshold, up to six fractional places",schema:{type:"string",example:"1.000000"}},
+          {name:"sender",in:"query",required:false,description:"Optional expected native USDC Transfer from wallet, not KYC or invoice proof",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$"}}
+        ],
+        responses:{
+          "200":{description:"Genuine, paid read-only native Circle USDC receipt proof. Payer intent not certified."},
+          "400":{description:"Invalid wallet/hash/minimum/duplicate query data, rejected before payment."},
+          "402":{description:"Exact x402 USDC payment required; 0.005 USDC on Base.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
+          "404":{description:"Transaction not found, no payment required."},
+          "409":{description:"Failed transaction, no payment required."},
+          "422":{description:"Insufficient token net received or wrong sender, no payment required."},
+          "425":{description:"Fewer than twelve recent Base blocks, no payment required."},
+          "503":{description:"Public Base RPC unavailable, no payment requested."}
+        }
+      }},
       "/v1/x402-template":{get:{
         tags:["Lint"],summary:"Verified x402 v2 OpenAPI template for 0.01 Base USDC",
         operationId:"getX402OpenApiTemplate",security:[{x402Payment:[]}],
@@ -71,8 +99,8 @@ export function makeDiscovery(origin) {
   };
   const wellKnown={
     version:1,
-    resources:[endpoint,templateEndpoint],
-    instructions:"Paid POST /v1/lint requires JSON {spec:'OpenAPI YAML string'} before a 402 quote. Paid GET /v1/x402-template returns a verified original x402 v2 OpenAPI reference document. GET /v1/sample remains free. No live USDC settlement has yet been verified.",
+    resources:[endpoint,templateEndpoint,receiptEndpoint],
+    instructions:"Paid GET /v1/base-usdc-receipt verifies native Circle USDC transaction on Base by tx, recipient, minUsdc and optional sender for 0.005 USDC; input/failing transactions do not reach 402. Paid POST /v1/lint requires JSON {spec:'OpenAPI YAML string'} before a 402 quote. Paid GET /v1/x402-template returns a verified original x402 v2 OpenAPI reference document. GET /v1/sample remains free. No live USDC settlement has yet been verified.",
     claim:"discovered x402 quote only, not an observed settled payment"
   };
   return {spec,wellKnown};
