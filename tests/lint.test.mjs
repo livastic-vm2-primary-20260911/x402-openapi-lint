@@ -83,6 +83,33 @@ test("New GET x402 template is gated by 0.01 Base USDC without requiring a reque
  assert.ok(quote.resource.url.includes("/v1/x402-template"));
 });
 
+test("Exact public 402 challenge is also self-consistently mirrored for legacy catalog discovery",async()=>{
+ const response=await fetch(base+"/v1/x402-template");
+ assert.equal(response.status,402);
+ const canonical=response.headers.get("payment-required");
+ assert.ok(canonical);
+ assert.equal(response.headers.get("x-payment-required"),canonical);
+ const original=JSON.parse(Buffer.from(canonical,"base64").toString("utf8"));
+ const body=await response.json();
+ assert.deepEqual(body,original);
+ assert.equal(body.x402Version,2);
+ assert.equal(body.accepts.length,1);
+ assert.equal(body.accepts[0].network,"eip155:8453");
+ assert.equal(body.accepts[0].amount,"10000");
+ assert.equal(body.accepts[0].payTo.toLowerCase(),"0x6b01efa0705e91a7aca54271510bf9e594717f34");
+ assert.equal(body.accepts[0].asset.toLowerCase(),"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913");
+ assert.ok(response.headers.get("access-control-expose-headers")?.includes("X-Payment-Required"));
+});
+test("Legacy challenge body is isolated to GET template; paid lint POST preserves normal x402 v2 middleware",async()=>{
+ const r=await fetch(base+"/v1/lint",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({spec:example})
+ });
+ assert.equal(r.status,402);
+ assert.ok(r.headers.get("payment-required"));
+ assert.equal(r.headers.get("x-payment-required"),null);
+});
+
 test("LOCAL MOCK ONLY: signed GET template challenge yields reusable payment header and verified 0-warning YAML",async()=>{
  const unpaid=await fetch(base+"/v1/x402-template");
  assert.equal(unpaid.status,402);

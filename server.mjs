@@ -188,7 +188,36 @@ app.get("/v1/base-usdc-receipt",async(req,res,next)=>{
   chargedUSDC:"0.005",
   payment:"x402 v2 exact Base Circle native USDC. Real independent payment settlement NOT yet demonstrated on production."
 }));
-app.get("/v1/x402-template",payment,(_req,res)=>res.status(200).json({
+// Compatibility for legacy marketplace probes: x402 v2's canonical PaymentRequired
+// stays in PAYMENT-REQUIRED; mirror that identical public quote in a JSON 402 body
+// only for the already-paid GET template route. Do not change any payment/settlement.
+function echoCanonicalX402ChallengeOnTemplate(_req,res,next) {
+  const send=res.send;
+  res.send=function(body) {
+    const wire=res.getHeader("PAYMENT-REQUIRED");
+    if (res.statusCode===402 && typeof wire==="string" && wire.length<20000) {
+      try {
+        const quote=JSON.parse(Buffer.from(wire,"base64").toString("utf8"));
+        const a=quote?.accepts;
+        if (quote?.x402Version===2 && Array.isArray(a) && a.length===1 &&
+            a[0]?.scheme==="exact" && a[0]?.network===NETWORK &&
+            a[0]?.payTo?.toLowerCase()===PAY_TO.toLowerCase() &&
+            a[0]?.asset?.toLowerCase()==="0x833589fcd6edb6e08f4c7c32d4f71b54bda02913" &&
+            a[0]?.amount==="10000") {
+          res.setHeader("X-Payment-Required",wire); // legacy discovery alias, same bytes
+          res.setHeader("Access-Control-Expose-Headers",
+                        "PAYMENT-REQUIRED,X-Payment-Required,PAYMENT-RESPONSE");
+          res.type("json");
+          return send.call(res,JSON.stringify(quote));
+        }
+      }catch { /* Fail closed to the standard x402 middleware response */ }
+    }
+    return send.call(res,body);
+  };
+  next();
+}
+
+app.get("/v1/x402-template",echoCanonicalX402ChallengeOnTemplate,payment,(_req,res)=>res.status(200).json({
   ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
   kind:"x402_v2_openapi_starter",templateFormat:"YAML",openapiTemplate:paymentTemplate,
   redocly:paymentTemplateReport,
