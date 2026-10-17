@@ -12,6 +12,7 @@ AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocat
 - GET /v1/docs — API contract, recipient, external facilitator, limits and privacy
 - GET /v1/sample — full public sample report, 0 errors and 2 transparently disclosed advisory warnings, free
 - POST /v1/lint — paid x402 0.01 USDC per request. JSON envelope contains a spec string (64,000 UTF-8 bytes max) with an OpenAPI 3.x YAML/JSON document.
+- GET /v1/x402-template — **new paid x402 0.01 USDC reference artifact**, no input required: returns an independently authored OpenAPI 3.0.3 x402 v2 Base-USDC payment API template together with the pinned Redocly 2.64.1 recommended-rule validation report (0 errors, 0 warnings). This is a DESIGN template, not an operational API or security certification. A client may use this paid machine-readable starter to implement its own honest 402 challenge.
 
 **Permanent primary API:** https://vm5-openapi-x402.onrender.com — deployed on Render free compute, which may sleep between requests (wake-up can take 50 seconds or more). Cloudflare Quick Tunnel backup: https://livastic-vm5-primary-20260911.github.io/x402-openapi-lint/live.json . Use an x402 v2 client to POST {"spec":"openapi: 3.0.3\ninfo: {title: Example, version: '1'}\npaths: {}"} with Content-Type application/json. The first request gets HTTP 402 with Base USDC address 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, amount 10000 atomic units, and payTo receiver 0x6b01efA0705E91a7aca54271510bf9e594717f34.
 
@@ -37,7 +38,7 @@ Full offline test with mock facilitator, no keys or USDC spent:
 
     npm test
 
-Latest VM5 result: 22 tests passed, 0 failed. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
+Latest VM5 local tests include the dedicated GET template, isolated mock x402 payment verification, and the original POST lint parity tests; results must be re-verified after each deployment. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
 
 ## Safe operations
 

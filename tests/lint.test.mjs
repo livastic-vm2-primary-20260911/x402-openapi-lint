@@ -57,6 +57,62 @@ test("public sample preview needs no payment",async()=>{
  assert.equal(o.paid,false);
  assert.equal(o.warnings,2);
 });
+test("Original x402 OpenAPI payment starter validates without private APIs or external references",async()=>{
+ const template=fs.readFileSync(new URL("../examples/x402-payment-template.yaml",import.meta.url),"utf8");
+ assert.equal(parseAndGuardSpec(template).ok,true);
+ const result=await lintSpec(template);
+ assert.equal(result.valid,true);
+ assert.equal(result.errors,0);
+ assert.equal(result.warnings,0);
+ assert.match(template,/PAYMENT-REQUIRED/);
+ assert.match(template,/PAYMENT-RESPONSE/);
+ assert.match(template,/PAYMENT-SIGNATURE/);
+ assert.match(template,/payments\.example\.invalid/);
+});
+
+test("New GET x402 template is gated by 0.01 Base USDC without requiring a request body",async()=>{
+ const response=await fetch(base+"/v1/x402-template");
+ assert.equal(response.status,402);
+ const encoded=response.headers.get("payment-required");
+ assert.ok(encoded);
+ const quote=JSON.parse(Buffer.from(encoded,"base64").toString());
+ assert.equal(quote.x402Version,2);
+ assert.equal(quote.accepts[0].network,"eip155:8453");
+ assert.equal(quote.accepts[0].amount,"10000");
+ assert.equal(quote.accepts[0].payTo.toLowerCase(),"0x6b01efa0705e91a7aca54271510bf9e594717f34");
+ assert.ok(quote.resource.url.includes("/v1/x402-template"));
+});
+
+test("LOCAL MOCK ONLY: signed GET template challenge yields reusable payment header and verified 0-warning YAML",async()=>{
+ const unpaid=await fetch(base+"/v1/x402-template");
+ assert.equal(unpaid.status,402);
+ const quote=JSON.parse(Buffer.from(unpaid.headers.get("payment-required"),"base64").toString());
+ const marker="0x"+"11".repeat(65);
+ const authorization={
+   from:"0x"+"33".repeat(20),to:quote.accepts[0].payTo,
+   value:quote.accepts[0].amount,validAfter:"0",validBefore:"9999999999",
+   nonce:"0x"+"44".repeat(32)
+ };
+ const mock=Buffer.from(JSON.stringify({
+   x402Version:2,resource:quote.resource,accepted:quote.accepts[0],
+   payload:{signature:marker,authorization},extensions:quote.extensions||{}
+ })).toString("base64");
+ const paid=await fetch(base+"/v1/x402-template",{headers:{"PAYMENT-SIGNATURE":mock}});
+ assert.equal(paid.status,200);
+ const result=await paid.json();
+ assert.equal(result.ok,true);
+ assert.equal(result.paid,true);
+ assert.equal(result.kind,"x402_v2_openapi_starter");
+ assert.equal(result.redocly.errors,0);
+ assert.equal(result.redocly.warnings,0);
+ assert.ok(result.openapiTemplate.includes("PAYMENT-REQUIRED"));
+ const receipt=paid.headers.get("payment-response");
+ assert.ok(receipt);
+ const decoded=JSON.parse(Buffer.from(receipt,"base64").toString());
+ assert.equal(decoded.transaction,"0x"+"22".repeat(32));
+ // Strictly local fake facilitator, not an observed real on-chain payout.
+});
+
 test("valid paid request without signature returns Base x402 v2 challenge",async()=>{
  const r=await fetch(base+"/v1/lint",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({spec:example})});
  assert.equal(r.status,402);
@@ -99,6 +155,8 @@ test("Machine-discoverable OpenAPI metadata exposes one paid POST and accurate 4
  assert.ok(op.responses["402"]);
  assert.ok(op.requestBody.content["application/json"].example.spec);
  assert.equal(spec.paths["/v1/sample"].get.security.length,0);
+ assert.ok(spec.paths["/v1/x402-template"].get);
+ assert.equal(spec.paths["/v1/x402-template"].get["x-payment-info"].price.amount,"0.01");
  assert.ok(spec.components.securitySchemes.x402Payment);
  assert.ok(!JSON.stringify(spec).includes("onecursora1@gmail.com"));
 });
@@ -109,7 +167,8 @@ test("Well-known x402 document points at current lint POST route",async()=>{
   const manifest=await r.json();
   assert.equal(manifest.version,1);
   assert.ok(manifest.resources.some(s=>s.endsWith("/v1/lint")));
-  assert.equal(manifest.resources.length,1);
+  assert.equal(manifest.resources.length,2);
+  assert.ok(manifest.resources.some(s=>s.endsWith("/v1/x402-template")));
  }
 });
 

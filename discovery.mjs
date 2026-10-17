@@ -5,6 +5,7 @@ export function makeDiscovery(origin) {
     throw Error("Unexpected public origin");
   }
   const endpoint=origin+"/v1/lint";
+  const templateEndpoint=origin+"/v1/x402-template";
   const payInfo={
     protocols:["x402"],
     price:{mode:"fixed",currency:"USD",amount:"0.01"},
@@ -36,6 +37,17 @@ export function makeDiscovery(origin) {
       "/health":{get:{summary:"Free health check",operationId:"health",security:[],responses:{"200":{description:"Current service health."}}}},
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
+      "/v1/x402-template":{get:{
+        tags:["Lint"],summary:"Verified x402 v2 OpenAPI template for 0.01 Base USDC",
+        operationId:"getX402OpenApiTemplate",security:[{x402Payment:[]}],
+        description:"Return an original OpenAPI 3.0.3 payment-template YAML document and its zero-error Redocly recommended lint report. This is a DESIGN template, not an active settlement or security guarantee.",
+        "x-payment-info":payInfo,
+        responses:{
+          "200":{description:"Paid OpenAPI template, pinned Redocly lint report and limitations."},
+          "402":{description:"x402 Base USDC signed payment required.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"},description:"Base64 x402 v2 payment requirements, amount 10000 USDC atomic units."}}},
+          "429":{description:"Request rate limited before any payment."}
+        }
+      }},
       "/v1/lint":{
         post:{
           tags:["Lint"],summary:"Lint OpenAPI YAML or JSON for 0.01 Base USDC",
@@ -59,8 +71,8 @@ export function makeDiscovery(origin) {
   };
   const wellKnown={
     version:1,
-    resources:[endpoint],
-    instructions:"Paid POST /v1/lint requires JSON {spec:'OpenAPI YAML string'} to return the x402 402 challenge. Sample GET /v1/sample is always free. No real settlement has yet been verified.",
+    resources:[endpoint,templateEndpoint],
+    instructions:"Paid POST /v1/lint requires JSON {spec:'OpenAPI YAML string'} before a 402 quote. Paid GET /v1/x402-template returns a verified original x402 v2 OpenAPI reference document. GET /v1/sample remains free. No live USDC settlement has yet been verified.",
     claim:"discovered x402 quote only, not an observed settled payment"
   };
   return {spec,wellKnown};

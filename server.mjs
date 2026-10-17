@@ -25,6 +25,10 @@ const sample=fs.readFileSync(path.resolve(DIR,"examples/sample.yaml"),"utf8");
 const sampleReport=await lintSpec(sample);
 if(sampleReport.errors!==0)throw Error("Pinned server Redocly failed on known valid example");
 if(sampleReport.warnings!==2)throw Error("Pinned example lint changed unexpectedly. Revalidate published product.");
+// Original local OpenAPI x402 v2 reference, offered as a paid machine-readable starter.
+const paymentTemplate=fs.readFileSync(path.resolve(DIR,"examples/x402-payment-template.yaml"),"utf8");
+const paymentTemplateReport=await lintSpec(paymentTemplate);
+if(paymentTemplateReport.errors!==0 || paymentTemplateReport.warnings!==0)throw Error("x402 template lint baseline changed. Refuse to serve an invalid reference.");
 
 const facilitator=new HTTPFacilitatorClient({url:FACILITATOR_URL});
 const resourceServer=new x402ResourceServer(facilitator);
@@ -50,6 +54,12 @@ const documentation={
     payment:"x402 v2 EIP-3009 Base USDC signature",
     facilitator:FACILITATOR_URL
   },
+  paidTemplate:{
+    method:"GET",path:"/v1/x402-template",priceUSDC:"0.01",network:NETWORK,
+    purpose:"Get a ready-to-adapt, independently authored x402 v2 OpenAPI 3.0.3 template and Redocly validation report; no customer spec submitted.",
+    payment:"Exact x402 v2 Base USDC through the same verified payment middleware",
+    caveat:"Reference design only. Replace example.invalid URLs and provide your own secure payment verification/settlement implementation."
+  },
   free:{
     "/health":"Basic readiness check, no payment",
     "/v1/sample":"Full example lint result from independently verified public sample",
@@ -70,6 +80,11 @@ const routes={
       inputSchema:{type:"object",properties:{spec:{type:"string",description:"OpenAPI YAML/JSON (no external $ref)" }},required:["spec"]},
       output:{example:{valid:true,errors:0,warnings:1,lintVersion:REDOCLY_VERSION,findings:[{ruleId:"operation-4xx-response",severity:"warn",message:"Operation must have at least one 4XX response."}]}}
     })
+  },
+  "GET /v1/x402-template":{
+    accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
+    description:"Machine-readable verified OpenAPI 3.0.3 x402 payment template with honest payment header schemas, errors, and zero lint defects.",
+    mimeType:"application/json"
   }
 };
 const payment=paymentMiddleware(routes,resourceServer,undefined,undefined,false);
@@ -118,6 +133,12 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+app.get("/v1/x402-template",payment,(_req,res)=>res.status(200).json({
+  ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
+  kind:"x402_v2_openapi_starter",templateFormat:"YAML",openapiTemplate:paymentTemplate,
+  redocly:paymentTemplateReport,
+  disclosure:"Original reference template and lint evidence only; not an operating payment API or a guarantee that your server settles USDC. Replace all placeholder hosts and implement secure verification."
+}));
 app.get("/openapi.json",(req,res)=>{
   try{const origin=req.protocol+"://"+req.get("host");res.json(makeDiscovery(origin).spec);}
   catch{return res.status(503).json({error:"Discovery host not available."});}

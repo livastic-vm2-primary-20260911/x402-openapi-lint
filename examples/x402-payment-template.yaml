@@ -1,0 +1,89 @@
+openapi: 3.0.3
+info:
+  title: x402 v2 Paid API Template for Agents
+  version: "1.0.0"
+  description: |
+    Independently authored reference for AI agent developers.
+    This is a DESIGN TEMPLATE, not an operating paid service.
+    Replace all example.invalid URLs and addresses before use.
+    An HTTP 402 quote is not proof of successful on-chain settlement.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://payments.example.invalid
+    description: Placeholder only - replace with your own production HTTPS server.
+tags:
+  - name: Agent Payments
+    description: USDC payment-gated machine-readable API.
+components:
+  securitySchemes:
+    x402Payment:
+      type: apiKey
+      in: header
+      name: PAYMENT-SIGNATURE
+      description: Buyer-signed payment authorization; never send private keys or seeds.
+security:
+  - x402Payment: []
+paths:
+  /v1/research:
+    get:
+      tags: [Agent Payments]
+      operationId: readAgentResearch
+      summary: Request a research brief after USDC payment.
+      description: |
+        First call returns a 402 with a base64-encoded PAYMENT-REQUIRED
+        header. A client may opt in by signing its own exact
+        EIP-3009 USDC authorization and retrying with PAYMENT-SIGNATURE.
+        Actual settlement must be verified by the facilitator.
+      parameters:
+        - in: query
+          name: subject
+          required: true
+          description: Public, non-secret research topic.
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 120
+          example: Ethereum USDC liquidity
+      responses:
+        "200":
+          description: Successful paid result after verification and settlement.
+          headers:
+            PAYMENT-RESPONSE:
+              description: Base64-encoded settlement receipt; validate independently.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [subject, summary]
+                properties:
+                  subject:
+                    type: string
+                  summary:
+                    type: string
+                  asOfUTC:
+                    type: string
+                    format: date-time
+        "400":
+          description: Malformed subject, rejected before requesting payment.
+        "402":
+          description: x402 v2 Base USDC payment signature required.
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded x402 v2 requirements including network, amount, USDC contract, payTo.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "429":
+          description: Rate limit exceeded without charging the client.
+        "503":
+          description: Service unavailable; refer to payment receipt if authorization was signed.
