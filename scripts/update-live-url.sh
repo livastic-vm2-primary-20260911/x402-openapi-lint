@@ -7,6 +7,8 @@ LIVE="$(sudo -n journalctl -u vm5-x402-tunnel.service -n 110 --no-pager --output
 [[ "$LIVE" =~ ^https://[a-z0-9-]+\.trycloudflare\.com$ ]] || { echo "Quick Tunnel hostname missing"; exit 1; }
 HEALTH="$(curl -fsSL --connect-timeout 6 --max-time 12 "$LIVE/health")"
 printf '%s' "$HEALTH" | grep -q '"service":"vm5-openapi-x402"' || { echo "Current tunnel does not serve the expected application"; exit 2; }
+# Fail closed if the backup app is a stale build: health alone previously passed while paid GET routes 404ed.
+python3 -B scripts/verify-public-paid-quote.py "$LIVE" >/dev/null || { echo "Paid x402 routes not ready. Refusing to publish reachable pointer."; exit 3; }
 python3 - "$LIVE" <<'PY'
 import json,sys,pathlib,datetime
 p=pathlib.Path("docs/live.json")
