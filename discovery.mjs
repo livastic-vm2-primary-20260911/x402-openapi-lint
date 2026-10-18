@@ -55,7 +55,7 @@ export function makeDiscovery(origin) {
           {name:"sender",in:"query",required:false,description:"Optional expected native USDC Transfer from wallet, not KYC or invoice proof",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$"}}
         ],
         responses:{
-          "200":{description:"Genuine, paid read-only native Circle USDC receipt proof. Payer intent not certified."},
+          "200":{description:"Genuine, paid read-only native Circle USDC receipt proof. Payer intent not certified.",content:{"application/json":{schema:{type:"object",required:["verifiedNativeUSDCReceipt","transactionHash","netIncomingUSDC","chargedUSDC"],properties:{verifiedNativeUSDCReceipt:{type:"boolean"},transactionHash:{type:"string",pattern:"^0x[0-9a-fA-F]{64}$"},chainId:{type:"integer",example:8453},netIncomingUSDC:{type:"string"},minimumUSDC:{type:"string"},confirmations:{type:"string"},chargedUSDC:{type:"string",example:"0.005"},payment:{type:"string"}}}}}},
           "400":{description:"Invalid wallet/hash/minimum/duplicate query data, rejected before payment."},
           "402":{description:"Exact x402 USDC payment required; 0.005 USDC on Base.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
           "404":{description:"Transaction not found, no payment required."},
@@ -72,7 +72,7 @@ export function makeDiscovery(origin) {
         "x-payment-info":payInfo,
         parameters:[{name:"X-Template-Format",in:"header",required:false,description:"Optional format hint; only YAML is supported. The paid URL takes no query string; omitting the header is equivalent to YAML.",schema:{type:"string",enum:["yaml"],default:"yaml",example:"yaml"}}],
         responses:{
-          "200":{description:"Paid OpenAPI template, pinned Redocly lint report and limitations."},
+          "200":{description:"Paid OpenAPI YAML template, pinned Redocly lint report and limitations.",content:{"application/json":{schema:{type:"object",required:["ok","paid","kind","templateFormat","openapiTemplate","chargedUSDC"],properties:{ok:{type:"boolean"},paid:{type:"boolean"},chargedUSDC:{type:"string",example:"0.01"},network:{type:"string",example:"eip155:8453"},kind:{type:"string",enum:["x402_v2_openapi_starter"]},templateFormat:{type:"string",enum:["YAML"]},openapiTemplate:{type:"string",description:"Verified example OpenAPI YAML; replace all placeholder hosts."},redocly:{type:"object"},disclosure:{type:"string"}}}}}},
           "400":{description:"Unsupported format or unexpected query parameter, rejected before payment."},
           "402":{description:"x402 Base USDC signed payment required.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"},description:"Base64 x402 v2 payment requirements, amount 10000 USDC atomic units."}}},
           "429":{description:"Request rate limited before any payment."}

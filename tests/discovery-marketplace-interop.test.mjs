@@ -58,3 +58,18 @@ test("Unsupported header is refused before any payment challenge",async()=>{
   const body=await r.json();
   assert.equal(body.charged,false);
 });
+
+test("Public merchant discovery publishes actual paid JSON output schemas",()=>{
+  const {spec}=makeDiscovery(ORIGIN);
+  const receipt=spec.paths["/v1/base-usdc-receipt"].get.responses["200"].content["application/json"].schema;
+  assert.equal(receipt.type,"object");
+  assert.ok(receipt.required.includes("transactionHash"));
+  assert.ok(receipt.required.includes("netIncomingUSDC"));
+  assert.equal(receipt.properties.verifiedNativeUSDCReceipt.type,"boolean");
+  assert.equal(receipt.properties.chargedUSDC.example,"0.005");
+  const template=spec.paths["/v1/x402-template"].get.responses["200"].content["application/json"].schema;
+  assert.equal(template.type,"object");
+  assert.ok(template.required.includes("openapiTemplate"));
+  assert.deepEqual(template.properties.templateFormat.enum,["YAML"]);
+  assert.equal(template.properties.chargedUSDC.example,"0.01");
+});
