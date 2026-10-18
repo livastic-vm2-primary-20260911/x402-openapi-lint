@@ -119,7 +119,7 @@ async function ready() {
 let code=1;
 try{
   await ready();
-  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs","tests/base-usdc-receipt.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
+  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs","tests/base-usdc-receipt.test.mjs","tests/discovery-marketplace-interop.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
   const [exit]=await once(tests,"close");
   code=exit??1;
 } catch(e){console.error(e.stack||e);code=1;}

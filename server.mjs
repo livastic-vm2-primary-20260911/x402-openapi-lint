@@ -217,7 +217,15 @@ function echoCanonicalX402ChallengeOnTemplate(_req,res,next) {
   next();
 }
 
-app.get("/v1/x402-template",echoCanonicalX402ChallengeOnTemplate,payment,(_req,res)=>res.status(200).json({
+function validateOptionalTemplateFormat(req,res,next){
+  const format=req.get("X-Template-Format");
+  if(Object.keys(req.query).length ||
+     (format!==undefined && format!=="yaml")){
+    return res.status(400).json({ok:false,charged:false,error:"Only the optional X-Template-Format: yaml header is supported; this paid URL takes no query string."});
+  }
+  next();
+}
+app.get("/v1/x402-template",validateOptionalTemplateFormat,echoCanonicalX402ChallengeOnTemplate,payment,(_req,res)=>res.status(200).json({
   ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
   kind:"x402_v2_openapi_starter",templateFormat:"YAML",openapiTemplate:paymentTemplate,
   redocly:paymentTemplateReport,

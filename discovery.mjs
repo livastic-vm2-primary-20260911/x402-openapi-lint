@@ -49,9 +49,9 @@ export function makeDiscovery(origin) {
         security:[{x402Payment:[]}],
         "x-payment-info":receiptPayInfo,
         parameters:[
-          {name:"tx",in:"query",required:true,description:"0x-prefixed 32-byte transaction hash on Base",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{64}$"}},
-          {name:"recipient",in:"query",required:true,description:"Expected native USDC recipient wallet",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$"}},
-          {name:"minUsdc",in:"query",required:true,description:"USDC threshold, up to six fractional places",schema:{type:"string",example:"1.000000"}},
+          {name:"tx",in:"query",required:true,description:"0x-prefixed 32-byte Base transaction hash. Public sample from an unrelated independently-funded historical AgentBounties escrow; NOT a VM5 customer payment.",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{64}$",example:"0x53aac65f9e41a01430851290ef634b4ee9c8b933511cc8f8b6abbc2ead82a54d"}},
+          {name:"recipient",in:"query",required:true,description:"Expected native Circle USDC recipient. Public example is an unrelated escrow contract, NOT the VM5 seller payTo.",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$",example:"0xbf99f1c2c690c8bcd45e341006bf7b7dd6c41cdc"}},
+          {name:"minUsdc",in:"query",required:true,description:"USDC threshold, up to six fractional places. Example matches the unrelated public transaction; not VM5 revenue.",schema:{type:"string",example:"21.300000"}},
           {name:"sender",in:"query",required:false,description:"Optional expected native USDC Transfer from wallet, not KYC or invoice proof",schema:{type:"string",pattern:"^0x[0-9a-fA-F]{40}$"}}
         ],
         responses:{
@@ -70,8 +70,10 @@ export function makeDiscovery(origin) {
         operationId:"getX402OpenApiTemplate",security:[{x402Payment:[]}],
         description:"Return an original OpenAPI 3.0.3 payment-template YAML document and its zero-error Redocly recommended lint report. This is a DESIGN template, not an active settlement or security guarantee.",
         "x-payment-info":payInfo,
+        parameters:[{name:"X-Template-Format",in:"header",required:false,description:"Optional format hint; only YAML is supported. The paid URL takes no query string; omitting the header is equivalent to YAML.",schema:{type:"string",enum:["yaml"],default:"yaml",example:"yaml"}}],
         responses:{
           "200":{description:"Paid OpenAPI template, pinned Redocly lint report and limitations."},
+          "400":{description:"Unsupported format or unexpected query parameter, rejected before payment."},
           "402":{description:"x402 Base USDC signed payment required.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"},description:"Base64 x402 v2 payment requirements, amount 10000 USDC atomic units."}}},
           "429":{description:"Request rate limited before any payment."}
         }
