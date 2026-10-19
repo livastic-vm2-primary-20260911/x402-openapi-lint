@@ -9,6 +9,7 @@ import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import {parseAndGuardSpec,lintSpec,REDOCLY_VERSION,LIMIT_BYTES} from "./validator.mjs";
 import {makeDiscovery} from "./discovery.mjs";
 import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt.mjs";
+import {parseGlbBase64, MAX_GLB_BYTES} from "./glb-analyzer.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -67,6 +68,9 @@ const documentation={
     purpose:"Read-only Circle native Base USDC receipt proof with 12-block confirmation gate, net token Transfer logs, strict optional sender, exact integer decimals.",
     caveat:"Successful Transfer log is not invoice settlement, buyer intent, a security audit or proof of account ownership. Invalid/failed/unconfirmed receipts are rejected BEFORE payment."
   },
+  paidGlb:{method:"POST",path:"/v1/analyze-glb",priceUSDC:"0.01",network:NETWORK,
+    purpose:"In-memory non-executing GLB 2 model inspection, geometry/triangles/materials/local bounds, <=1.5MB. No remote fetch, files retained or source distribution.",
+    caution:"This is a paid descriptive model metadata review, not a security, copyright or full glTF compliance certification. A developer may need original engine-level tests."},
   paidTemplate:{
     method:"GET",path:"/v1/x402-template",priceUSDC:"0.01",network:NETWORK,
     purpose:"Get a ready-to-adapt, independently authored x402 v2 OpenAPI 3.0.3 template and Redocly validation report; no customer spec submitted.",
@@ -83,6 +87,11 @@ const documentation={
   disclosure:"VM5 is an AI-assisted seller. We do not claim settled payments or buyer reviews before verifying receipts."
 };
 const routes={
+  "POST /v1/analyze-glb":{
+    accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
+    description:"Audit one original or client-provided glTF 2.0 GLB in RAM; return triangles, materials and local geometry bounds. The input must be canonical base64 JSON, 28 bytes to 1.5MB; rejects external buffers/texture URLs. This is not a full glTF parser or malware certification.",
+    mimeType:"application/json"
+  },
   "POST /v1/lint":{
     accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
     description:"Linter checks OpenAPI YAML/JSON using Redocly recommended rules; report includes rule IDs, locations, severity and counts. External refs disabled.",
@@ -151,6 +160,11 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+app.get("/v1/glb-sample",(_req,res)=>res.json({ok:true,paid:false,kind:"original_portfolio_metadata_example",
+  sampleSource:"Original VM5 portfolio at https://livastic-vm5-primary-20260911.github.io/last-one-3d-survival-demo/props.html",
+  examples:[{name:"forest_lantern",triangleCount:380,materialCount:8,localHeightMetres:1.82},
+    {name:"moss_marker",triangleCount:228,materialCount:4,localHeightMetres:1.9}],
+  disclosure:"These are synthetic self-authored geometry samples; not customer orders, not independent paid tests, not renderer or security certification."}));
 let inFlightUSDCReads=0;
 const pendingUSDCByIp=new Map();
 app.get("/v1/base-usdc-receipt",async(req,res,next)=>{
@@ -240,7 +254,33 @@ app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
   catch{return res.status(503).json({error:"Discovery host not available."});}
 });
 
-app.options("/v1/lint",(_req,res)=>res.status(204).end());
+app.options(["/v1/lint","/v1/analyze-glb"],(_req,res)=>res.status(204).end());
+
+const glbRequestByIp=new Map();
+app.post("/v1/analyze-glb",
+  express.json({limit:"2050kb",type:["application/json","application/*+json"]}),
+  (req,res,next)=>{
+    // Bound free preflight before x402; never hold a bad or oversized payload behind a charge.
+    const now=Date.now(),ip=req.ip,prev=glbRequestByIp.get(ip);
+    const current=(!prev||now-prev.started>60000)?{started:now,count:0}:prev;
+    current.count++;glbRequestByIp.set(ip,current);
+    if(glbRequestByIp.size>3000)for(const [key,v] of glbRequestByIp)if(now-v.started>60000)glbRequestByIp.delete(key);
+    if(current.count>12)return res.status(429).json({ok:false,charged:false,error:"GLB analysis preflight limited to twelve attempts/minute per IP."});
+    if(!req.is("application/json")&&!req.is("application/*+json"))return res.status(415).json({ok:false,charged:false,error:"Use JSON body with glbBase64 only."});
+    if(!req.body || typeof req.body!=="object" || Array.isArray(req.body) ||
+        Object.keys(req.body).length!==1 || !Object.prototype.hasOwnProperty.call(req.body,"glbBase64")){
+      return res.status(400).json({ok:false,charged:false,error:"Provide only {glbBase64: base64 of a glTF 2.0 binary GLB}.",maxGLBBytes:MAX_GLB_BYTES});
+    }
+    const report=parseGlbBase64(req.body.glbBase64);
+    if(!report.ok)return res.status(400).json({ok:false,charged:false,error:report.error,maxGLBBytes:MAX_GLB_BYTES});
+    res.locals.glbReport=report;
+    next();
+  },
+  payment,
+  (_req,res)=>res.status(200).json({...res.locals.glbReport,kind:"glb_v2_geometry_audit",
+    paid:true,chargedUSDC:"0.01",network:NETWORK,
+    disclosure:"x402 payment requires the sender's own signed authorization and facilitator settlement. Prior to any real outside purchase, owner revenue remains ZERO."})
+);
 
 app.post("/v1/lint",express.json({limit:"85kb",type:["application/json","application/*+json"]}),(req,res,next)=>{
   if(!req.is("application/json")&&!req.is("application/*+json"))return res.status(415).json({error:"Use application/json with {spec: OpenAPI YAML/JSON string}."});

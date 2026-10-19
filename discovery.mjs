@@ -7,6 +7,7 @@ export function makeDiscovery(origin) {
   const endpoint=origin+"/v1/lint";
   const templateEndpoint=origin+"/v1/x402-template";
   const receiptEndpoint=origin+"/v1/base-usdc-receipt";
+  const glbEndpoint=origin+"/v1/analyze-glb";
   const payInfo={
     protocols:["x402"],
     price:{mode:"fixed",currency:"USD",amount:"0.01"},
@@ -42,6 +43,7 @@ export function makeDiscovery(origin) {
       "/health":{get:{summary:"Free health check",operationId:"health",security:[],responses:{"200":{description:"Current service health."}}}},
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
+      "/v1/glb-sample":{get:{summary:"Free original self-produced 3D model metadata preview",operationId:"readGlbMetadataSample",security:[],responses:{"200":{description:"Not a paid customer job; public sample with private source retained."}}}},
       "/v1/base-usdc-receipt":{get:{
         summary:"Verify Base Circle USDC transaction receipt for 0.005 USDC",
         operationId:"verifyBaseUSDCReceipt",
@@ -78,6 +80,23 @@ export function makeDiscovery(origin) {
           "429":{description:"Request rate limited before any payment."}
         }
       }},
+      "/v1/analyze-glb":{
+        post:{
+          tags:["Lint"],summary:"Audit local glTF GLB model geometry for 0.01 native Base USDC",
+          operationId:"analyzeGlbGeometry",
+          description:"In-memory glTF 2 binary metadata and accessors audit: material/image/mesh/triangles/local bounding boxes. Strict canonical Base64, <=1.5MB. Rejects remote buffers, textures and unsupported sparse accessors before payment. Only structural metadata, not GLB rendering or any security/malware/licensing guarantee.",
+          security:[{x402Payment:[]}],
+          "x-payment-info":payInfo,
+          requestBody:{required:true,content:{"application/json":{schema:{type:"object",additionalProperties:false,required:["glbBase64"],properties:{glbBase64:{type:"string",maxLength:2000000,contentEncoding:"base64",description:"Canonical base64-encoded glTF 2.0 GLB, 28 bytes to 1.5MB. Do not submit proprietary content without authorization."}}}}}},
+          responses:{
+            "200":{description:"Paid reproducible GLB metadata result, not a complete glTF compliance audit.",content:{"application/json":{schema:{type:"object",required:["ok","kind","paid","triangleCount","meshCount","chargedUSDC"],properties:{ok:{type:"boolean"},kind:{type:"string",enum:["glb_v2_geometry_audit"]},paid:{type:"boolean"},triangleCount:{type:"integer"},meshCount:{type:"integer"},materialCount:{type:"integer"},dimensions:{type:["object","null"]},chargedUSDC:{type:"string",example:"0.01"},warnings:{type:"array",items:{type:"string"}}}}}}},
+            "400":{description:"Malformed, oversized or unsupported GLB; rejected BEFORE x402 challenge."},
+            "402":{description:"Pay 0.01 Circle native Base USDC with x402 v2 signed authorization.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
+            "413":{description:"Request exceeds body limit; rejected without payment."},
+            "429":{description:"Too many attempts per minute, rejected without payment."}
+          }
+        }
+      },
       "/v1/lint":{
         post:{
           tags:["Lint"],summary:"Lint OpenAPI YAML or JSON for 0.01 Base USDC",
@@ -101,8 +120,8 @@ export function makeDiscovery(origin) {
   };
   const wellKnown={
     version:1,
-    resources:[endpoint,templateEndpoint,receiptEndpoint],
-    instructions:"Paid GET /v1/base-usdc-receipt verifies native Circle USDC transaction on Base by tx, recipient, minUsdc and optional sender for 0.005 USDC; input/failing transactions do not reach 402. Paid POST /v1/lint requires JSON {spec:'OpenAPI YAML string'} before a 402 quote. Paid GET /v1/x402-template returns a verified original x402 v2 OpenAPI reference document. GET /v1/sample remains free. No live USDC settlement has yet been verified.",
+    resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint],
+    instructions:"Paid GET /v1/base-usdc-receipt proves native Circle USDC transfer on Base for 0.005 USDC. POST /v1/lint validates OpenAPI for 0.01 USDC. Paid GET /v1/x402-template serves verified original reference for 0.01 USDC. New POST /v1/analyze-glb reviews glTF 2.0 binary geometry and material metadata for 0.01 USDC. Input errors rejected before payment. GET /v1/sample and /v1/glb-sample free. No independent live payment settled yet.",
     claim:"discovered x402 quote only, not an observed settled payment"
   };
   return {spec,wellKnown};
