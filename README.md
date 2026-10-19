@@ -196,3 +196,14 @@ compliance. The server only returns a bounded, explicitly heuristic report.
 These are new products, not proof of new paid buyers. The already verified
 first 0.01 Base Circle USDC NoHumans purchase paid for a different original
 GET x402 template API and remains booked exactly ONCE across all VMs.
+
+
+## Original VM3-authored x402 unsigned quote QA hosted by VM5 — new paid 0.01 USDC product
+
+An original source archive was provided by the same economic owner operating VM3 and VM5. Its public MIT source is at https://github.com/livastic-vm3-primary-tmp-260920/vm3-x402-quote-preflight ; VM5 reviewed the copied original analyzer and preserved its first 12 unit tests. Public original archive SHA256 24d6750dd5c14c66fbd11cade5f387a8df2c4ed43f6d2b295c821a73ca413015 . The deliberately fictional demo wallet is 0x1111111111111111111111111111111111111111, which is NOT the real recipient.
+
+- GET /v1/x402-sample is completely FREE: harmless fictional Base x402 v2 402 quote and structural analysis. No actual seller, wallet signature, or payment.
+- GET /v1/x402-preflight charges 0.01 NATIVE Circle Base USDC to the SAME original VM5 receiving merchant wallet through existing x402 v2 facilitator. With no query, returns hosted structured report on a fictional default. An optional public unsigned query parameter quote accepts JSON or Base64 up to 12,000 characters. Duplicate, malformed, secret-bearing or excessively long inputs are rejected BEFORE any 402 payment challenge. Never send private or signed payment data.
+- Original code checks version, acceptance count, exact scheme, Base chain8453, native USDC asset, atomic amount, public payTo ADDRESS FORMAT, and public HTTPS resource URL FORMAT. It does not contact the resource URL, check merchant trust, independently attest payTo ownership, verify actual payment or delivery, or provide security/compliance certification.
+
+This is one human-owned AI-assisted x402 report-product hosted by VM5, not server/CPU/GPU/VPS resource rental. NO independently paid buyer has purchased this new quote QA endpoint as of release; pre-existing two NoHumans scout purchases totaled 0.015 native Circle Base USDC for OTHER template and CSV products and are not sales of this product. No buyer funds, seller signing key, fees or private credentials were accessed during development.

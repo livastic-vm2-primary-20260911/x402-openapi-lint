@@ -119,7 +119,7 @@ async function ready() {
 let code=1;
 try{
   await ready();
-  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs","tests/base-usdc-receipt.test.mjs","tests/discovery-marketplace-interop.test.mjs","tests/glb-analyzer.test.mjs","tests/glb-paid-route.test.mjs","tests/procedural-lowpoly-generator.test.mjs","tests/lowpoly-paid-route.test.mjs","tests/bazaar-cdp-validations.test.mjs","tests/first-actual-independent-sale.test.mjs","tests/csv-preflight.test.mjs","tests/csv-paid-route.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
+  const tests=spawn(process.execPath,["--test","tests/lint.test.mjs","tests/base-usdc-receipt.test.mjs","tests/discovery-marketplace-interop.test.mjs","tests/glb-analyzer.test.mjs","tests/glb-paid-route.test.mjs","tests/procedural-lowpoly-generator.test.mjs","tests/lowpoly-paid-route.test.mjs","tests/bazaar-cdp-validations.test.mjs","tests/first-actual-independent-sale.test.mjs","tests/csv-preflight.test.mjs","tests/csv-paid-route.test.mjs","tests/quote-preflight.test.mjs","tests/quote-paid-route.test.mjs"],{cwd:new URL("../",import.meta.url),env,stdio:"inherit"});
   const [exit]=await once(tests,"close");
   code=exit??1;
 } catch(e){console.error(e.stack||e);code=1;}

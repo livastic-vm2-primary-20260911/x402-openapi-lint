@@ -12,6 +12,7 @@ import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt
 import {parseGlbBase64, MAX_GLB_BYTES} from "./glb-analyzer.mjs";
 import {generateOriginalGlb} from "./procedural-lowpoly-generator.mjs";
 import {inspectCsv,validateCsvInput,DEMO_CSV,CSV_LIMITS} from "./csv-preflight.mjs";
+import {parsePublicQuote,evaluatePublicQuote,EXAMPLE_QUOTE,VERSION as VM3_QUOTE_VERSION} from "./quote-preflight.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -81,6 +82,10 @@ const documentation={
     limitations:"Not full spreadsheet compliance, data truth, threat scanning or GDPR certification; do not submit secrets, infrastructure/settlement log separately."},
   paidCsvDemo:{method:"GET",path:"/v1/csv-report",priceUSDC:"0.005",network:NETWORK,
     purpose:"Deliver a full machine-readable integrity report of an original synthetic test CSV. No customer data, request inputs or special query; pays for structured ready-to-consume report, which can also be computed from disclosed public sample."},
+  paidQuote:{method:"GET",path:"/v1/x402-preflight",priceUSDC:"0.01",network:NETWORK,
+    purpose:"Offline-only public unsigned x402 v2 HTTP402 quote consistency review, adapted from original same-owner VM3 source. No live network fetch, merchant identity certification, wallet spend or settlement proof.",
+    input:"One optional quote JSON or Base64 in query, max 12000 characters; omitted means a fake original public fixture",
+    source:"Same-beneficial-owner original VM3, MIT author source, hosted by original VM5 native Base Circle USDC seller",freePreview:"GET /v1/x402-sample"},
   paidLowpoly:{method:"GET",path:"/v1/generate-lowpoly",priceUSDC:"0.05",network:NETWORK,
     purpose:"Deliver reproducible AI-assisted original procedural GLB 2.0 forest lantern or stone marker as Base64 binary with seed and SHA256. This is an as-is non-exclusive convenience service, not exclusive IP or a paid client commission.",
     sample:"GET /v1/lowpoly-sample is free. GET /v1/generate-lowpoly defaults to kind=lantern and seed=0; optional kind=marker and integer seed 0..999999.",
@@ -131,6 +136,18 @@ const routes={
       inputSchema:{type:"object",additionalProperties:false,required:["csvText"],
         properties:{csvText:{type:"string",maxLength:32768},expectedColumns:{type:"array",items:{type:"string"},maxItems:40}}},
       output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"csv_structure_quality_preflight",dataRows:5,irregularRows:1,normalizedDuplicateRows:1,spreadsheetFormulaRiskCells:1}}
+    })
+  },
+  "GET /v1/x402-preflight":{
+    accepts:{scheme:"exact",price:"$0.01",network:NETWORK,payTo:PAY_TO},
+    description:"Original VM3 protocol-only public x402 v2 402 quote syntax review hosted by VM5; optional buyer supplied unsigned public quote, or no-input fictional example. Not a merchant safety, ownership, actual settlement, or identity certification.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{ok:true,paid:true,chargedUSDC:"0.01",
+        version:VM3_QUOTE_VERSION,kind:"x402_v2_public_402_offline_quote_review",
+        paymentNetwork:NETWORK,checkCount:8,failedChecks:0,unknownChecks:0,
+        reviewOutcome:"basic_public_structure_consistent",noSignedPaymentDataStored:true,noSpendingAuthorized:true}}
     })
   },
   "GET /v1/generate-lowpoly":{
@@ -380,6 +397,42 @@ app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
 });
 
 app.options(["/v1/lint","/v1/analyze-glb","/v1/csv-preflight"],(_req,res)=>res.status(204).end());
+
+app.get("/v1/x402-sample",(_req,res)=>res.status(200).json({
+  ok:true,paid:false,chargedUSDC:"0",sampleOnly:true,
+  version:VM3_QUOTE_VERSION,
+  kind:"vm3_original_vm5_hosted_public_x402_quote_sample",
+  exampleQuote:EXAMPLE_QUOTE,
+  analysis:{...evaluatePublicQuote(EXAMPLE_QUOTE),paid:false,chargedUSDC:"0"},
+  paidEndpoint:"GET /v1/x402-preflight",priceNativeBaseCircleUSDC:"0.01",
+  originalAdaptedSource:"VM3 original same-owner MIT x402 quote preflight, VM5 bounded hosted version",
+  caveat:"EXAMPLE.INVALID and syntactic fake payTo 0x111... are NOT a real merchant or original VM5 customer; VM5 actual payable x402 challenge uses configured VM5 public recipient."
+}));
+const quotePreflightRates=new Map();
+app.get("/v1/x402-preflight",(req,res,next)=>{
+  const id=req.ip,now=Date.now(),old=quotePreflightRates.get(id);
+  const state=(!old||now-old.at>60000)?{at:now,count:0}:old;
+  state.count++;quotePreflightRates.set(id,state);
+  if(quotePreflightRates.size>3000)for(const [key,item] of quotePreflightRates)if(now-item.at>60000)quotePreflightRates.delete(key);
+  if(state.count>12)return res.status(429).json({ok:false,charged:false,error:"Public x402 quote preflight limited to twelve attempts per minute."});
+  if(req.originalUrl.length>17500)return res.status(413).json({ok:false,charged:false,error:"Quote query exceeds 17500 characters."});
+  const keys=Object.keys(req.query);
+  if(keys.length>1||keys.some(key=>key!=="quote"))
+    return res.status(400).json({ok:false,charged:false,error:"Only one optional quote query string accepted."});
+  try{
+    const report=evaluatePublicQuote(parsePublicQuote(req.query.quote));
+    if(report.checkCount!==8 || !Array.isArray(report.checks))
+      return res.status(400).json({ok:false,charged:false,error:"Unexpected quote evaluator result."});
+    res.locals.quotePreflightReport=report;
+    return next();
+  }catch(error){
+    return res.status(400).json({ok:false,charged:false,error:typeof error.code==="string"?error.code:"INVALID_UNSIGNED_PUBLIC_QUOTE"});
+  }
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.quotePreflightReport,paid:true,chargedUSDC:"0.01",network:NETWORK,
+  originalSource:"VM3 authored public-source x402 402 quote syntax QA; VM5 existing hosted service and public recipient",
+  disclaimer:"No merchant visited; public quote syntax is NOT seller identity, actual payment settlement, customer delivery or safe merchant verification."
+}));
 
 app.get("/v1/csv-report",(req,res,next)=>{
   if(Object.keys(req.query).length)return res.status(400).json({ok:false,charged:false,error:"CSV demo report takes no query. POST /v1/csv-preflight for buyer-owned data."});
