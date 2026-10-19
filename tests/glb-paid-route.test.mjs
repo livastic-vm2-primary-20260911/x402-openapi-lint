@@ -106,3 +106,12 @@ test("Standard OpenAPI and well-known discovery include one unchanged-price paid
  assert.ok(op.responses["200"]);assert.ok(op.responses["402"]);
  assert.ok(d.wellKnown.resources.includes("https://vm5-openapi-x402.onrender.com/v1/analyze-glb"));
 });
+test("OpenAPI GLB inspector POST sample is fully valid and passes the paywall preflight",async()=>{
+ const d=makeDiscovery("https://vm5-openapi-x402.onrender.com");
+ const example=d.spec.paths["/v1/analyze-glb"].post.requestBody.content["application/json"].example;
+ assert.ok(example && typeof example.glbBase64==="string");
+ const r=await request(example);
+ assert.equal(r.status,402);
+ assert.ok(r.headers.get("PAYMENT-REQUIRED"));
+ assert.equal(Buffer.from(example.glbBase64,"base64").toString("ascii",0,4),"glTF");
+});

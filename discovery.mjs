@@ -1,4 +1,7 @@
 // Machine-readable origin-specific discovery for x402scan and standard OpenAPI clients.
+// Public original synthetic one-triangle sample enables valid POST paywall probes; no private assets.
+const SYNTHETIC_TRIANGLE_GLB_BASE64="Z2xURgIAAABYAQAAGAEAAEpTT057ImFzc2V0Ijp7InZlcnNpb24iOiIyLjAifSwiYnVmZmVycyI6W3siYnl0ZUxlbmd0aCI6MzZ9XSwiYnVmZmVyVmlld3MiOlt7ImJ1ZmZlciI6MCwiYnl0ZU9mZnNldCI6MCwiYnl0ZUxlbmd0aCI6MzZ9XSwiYWNjZXNzb3JzIjpbeyJidWZmZXJWaWV3IjowLCJjb21wb25lbnRUeXBlIjo1MTI2LCJjb3VudCI6MywidHlwZSI6IlZFQzMiLCJtaW4iOlswLDAsMF0sIm1heCI6WzEsMSwwXX1dLCJtZXNoZXMiOlt7InByaW1pdGl2ZXMiOlt7ImF0dHJpYnV0ZXMiOnsiUE9TSVRJT04iOjB9fV19XX0gJAAAAEJJTgAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA=";
+
 // Read-only, no remote calls, never exposes customer docs or platform credentials.
 export function makeDiscovery(origin) {
   if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin) && origin!=="https://vm5-openapi-x402.onrender.com" && !/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)){
@@ -146,7 +149,7 @@ export function makeDiscovery(origin) {
           description:"In-memory glTF 2 binary metadata and accessors audit: material/image/mesh/triangles/local bounding boxes. Strict canonical Base64, <=1.5MB. Rejects remote buffers, textures and unsupported sparse accessors before payment. Only structural metadata, not GLB rendering or any security/malware/licensing guarantee.",
           security:[{x402Payment:[]}],
           "x-payment-info":payInfo,
-          requestBody:{required:true,content:{"application/json":{schema:{type:"object",additionalProperties:false,required:["glbBase64"],properties:{glbBase64:{type:"string",maxLength:2000000,contentEncoding:"base64",description:"Canonical base64-encoded glTF 2.0 GLB, 28 bytes to 1.5MB. Do not submit proprietary content without authorization."}}}}}},
+          requestBody:{required:true,content:{"application/json":{schema:{type:"object",additionalProperties:false,required:["glbBase64"],properties:{glbBase64:{type:"string",maxLength:2000000,contentEncoding:"base64",description:"Canonical base64-encoded glTF 2.0 GLB, 28 bytes to 1.5MB. Do not submit proprietary content without authorization."}}},example:{glbBase64:SYNTHETIC_TRIANGLE_GLB_BASE64}}}},
           responses:{
             "200":{description:"Paid reproducible GLB metadata result, not a complete glTF compliance audit.",content:{"application/json":{schema:{type:"object",required:["ok","kind","paid","triangleCount","meshCount","chargedUSDC"],properties:{ok:{type:"boolean"},kind:{type:"string",enum:["glb_v2_geometry_audit"]},paid:{type:"boolean"},triangleCount:{type:"integer"},meshCount:{type:"integer"},materialCount:{type:"integer"},dimensions:{type:["object","null"]},chargedUSDC:{type:"string",example:"0.01"},warnings:{type:"array",items:{type:"string"}}}}}}},
             "400":{description:"Malformed, oversized or unsupported GLB; rejected BEFORE x402 challenge."},
