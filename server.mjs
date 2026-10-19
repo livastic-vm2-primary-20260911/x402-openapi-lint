@@ -14,6 +14,7 @@ import {generateOriginalGlb} from "./procedural-lowpoly-generator.mjs";
 import {inspectCsv,validateCsvInput,DEMO_CSV,CSV_LIMITS} from "./csv-preflight.mjs";
 import {parsePublicQuote,evaluatePublicQuote,EXAMPLE_QUOTE,VERSION as VM3_QUOTE_VERSION} from "./quote-preflight.mjs";
 import {validatePublicDomain,auditEmailDns} from "./email-dns-preflight.mjs";
+import {inspectPublicTlsCertificate} from "./public-https-tls-preflight.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -87,6 +88,10 @@ const documentation={
     purpose:"Public domain MX/SPF/DMARC DNS configuration preflight with read-only bounded lookups. No email addresses, SMTP, mailbox deliverability promise, DKIM selectors or security certification.",
     input:"Optional public domain, default gmail.com. Preflight DNS health checked before an x402 quote; failed DNS lookup is not billed.",
     freePreview:"GET /v1/email-dns-sample",confirmedIndependentCustomers:0},
+  paidHttpsCert:{method:"GET",path:"/v1/https-cert-preflight",priceUSDC:"0.005",network:NETWORK,
+    purpose:"Read one PUBLIC domain's current TLS X.509 certificate dates, issuer, hostname match and locally observed CA authorization via read-only port443 SNI. Only public IPv4 DNS destinations are accepted; no HTTP, SMTP, secrets, backend crawl, client tokens, private DNS resolution or domain safety certification.",
+    input:"Optional domain defaults to github.com; pinned public DNS v4 only, no port/URL/email/IP literals.",
+    freePreview:"GET /v1/tls-certificate-sample",confirmedIndependentCustomers:0},
   paidQuote:{method:"GET",path:"/v1/x402-preflight",priceUSDC:"0.01",network:NETWORK,
     purpose:"Offline-only public unsigned x402 v2 HTTP402 quote consistency review, adapted from original same-owner VM3 source. No live network fetch, merchant identity certification, wallet spend or settlement proof.",
     input:"One optional quote JSON or Base64 in query, max 12000 characters; omitted means a fake original public fixture",
@@ -141,6 +146,19 @@ const routes={
       inputSchema:{type:"object",additionalProperties:false,required:["csvText"],
         properties:{csvText:{type:"string",maxLength:32768},expectedColumns:{type:"array",items:{type:"string"},maxItems:40}}},
       output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"csv_structure_quality_preflight",dataRows:5,irregularRows:1,normalizedDuplicateRows:1,spreadsheetFormulaRiskCells:1}}
+    })
+  },
+  "GET /v1/https-cert-preflight":{
+    accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
+    description:"Public TLS certificate expiry, not-before, host match and CA-authorization preflight via pinned public IPv4 only. Domain optional defaults github.com. No customer endpoints, HTTP requests, source code, private IP or paid buyer order asserted; invalid public DNS/TLS fails before any x402 quote.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",output:{example:{
+        ok:true,paid:true,chargedUSDC:"0.005",kind:"public_https_certificate_preflight",
+        domain:"github.com",daysUntilExpiry:30,hostnameMatches:true,
+        chainAuthorized:true,certificateTrustAndHostnameVerified:true,
+        readOnlyPublicCertificateOnly:true,httpRequestsSent:0
+      }}
     })
   },
   "GET /v1/email-dns-preflight":{
@@ -281,6 +299,15 @@ app.get("/v1/email-dns-sample",(_req,res)=>res.status(200).json({
   sample:{kind:"public_email_dns_preflight",domain:"example.org",mxCount:1,spfPresent:true,dmarcPresent:true,dmarcPolicy:"reject",warnings:[],inspectedAtUTC:"FIXTURE_ONLY_NOT_LIVE_DNS"},
   paidEndpoint:"GET /v1/email-dns-preflight?domain=gmail.com",priceUSDC:"0.005",confirmedIndependentCustomers:0,
   caveat:"A synthetic fixture, not an actual DNS inspection or paid buyer order. Paid endpoint queries live public DNS MX, SPF and DMARC but cannot verify email deliverability, mailbox existence, DKIM selectors or security."
+}));
+app.get("/v1/tls-certificate-sample",(_req,res)=>res.status(200).json({
+  ok:true,paid:false,chargedUSDC:"0",exampleOnly:true,
+  kind:"SYNTHETIC_TLS_CERTIFICATE_PREVIEW_NOT_A_REAL_CERTIFICATE_CHECK",
+  sample:{domain:"example.org",inspectedAtUTC:"FIXTURE_ONLY",certificateExpiresAtUTC:"2099-01-01T00:00:00.000Z",daysUntilExpiry:30,
+    hostnameMatches:true,chainAuthorized:true,certificateTrustAndHostnameVerified:true},
+  paidEndpoint:"GET /v1/https-cert-preflight?domain=github.com",priceNativeBaseCircleUSDC:"0.005",
+  confirmedIndependentPaidOrders:0,
+  disclaimer:"The fixture is NOT real public TLS data, a paid order, HTTP website audit, ownership, revocation or certificate-transparency proof. Real service only contacts pinned public IPv4 port443 to read the presented certificate."
 }));
 app.get("/v1/receipt-sample",(_req,res)=>res.status(200).json({
   ok:true,paid:false,chargedUSDC:"0",exampleOnly:true,
@@ -485,6 +512,35 @@ app.get("/v1/email-dns-preflight",async(req,res,next)=>{
 },payment,(_req,res)=>res.status(200).json({
   ...res.locals.emailDnsReport,paid:true,chargedUSDC:"0.005",network:NETWORK,
   disclaimer:"Read-only public DNS configuration preflight, not domain ownership, SMTP deliverability, DKIM, authorization or security certification. DNS results may change."
+}));
+const tlsCertByIP=new Map();
+let tlsCertPending=0;
+app.get("/v1/https-cert-preflight",async(req,res,next)=>{
+  const now=Date.now(),client=req.ip,previous=tlsCertByIP.get(client);
+  const item=(!previous||now-previous.at>60000)?{at:now,count:0}:previous;
+  item.count++;tlsCertByIP.set(client,item);
+  if(tlsCertByIP.size>3000)for(const [key,row] of tlsCertByIP)if(now-row.at>60000)tlsCertByIP.delete(key);
+  if(item.count>(process.env.NODE_ENV==="test"?1000:8))return res.status(429).json({ok:false,charged:false,error:"Public certificate preflight limited to eight per minute."});
+  if(tlsCertPending>=2)return res.status(503).json({ok:false,charged:false,error:"Certificate checker busy; no payment requested."});
+  const names=Object.keys(req.query);
+  if(names.length>1||names.some(key=>key!=="domain"||typeof req.query[key]!=="string"))
+    return res.status(400).json({ok:false,charged:false,error:"Only one optional domain query is permitted."});
+  const domain=req.query.domain===undefined?"github.com":req.query.domain;
+  tlsCertPending++;
+  try{
+    const report=await inspectPublicTlsCertificate(domain);
+    if(!report.ok){
+      const status=report.error.startsWith("INVALID")||report.error.startsWith("NO_")?400:503;
+      return res.status(status).json({ok:false,charged:false,error:report.error});
+    }
+    res.locals.tlsCertReport=report;
+    next();
+  }catch{
+    return res.status(503).json({ok:false,charged:false,error:"Public TLS certificate source unavailable; no payment requested."});
+  }finally{tlsCertPending=Math.max(0,tlsCertPending-1);}
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.tlsCertReport,paid:true,chargedUSDC:"0.005",network:NETWORK,
+  disclaimer:"Read-only SNI TLS certificate observation on a pinned public IPv4 at time of request; no HTTP, domain ownership, CT/revocation, legal safety, all-clients acceptance, or future uptime guarantee. No independent buyer purchase yet proven."
 }));
 app.get("/v1/x402-sample",(_req,res)=>res.status(200).json({
   ok:true,paid:false,chargedUSDC:"0",sampleOnly:true,

@@ -16,6 +16,7 @@ export function makeDiscovery(origin) {
   const csvPreflightEndpoint=origin+"/v1/csv-preflight";
   const x402QuoteEndpoint=origin+"/v1/x402-preflight";
   const emailDnsEndpoint=origin+"/v1/email-dns-preflight";
+  const httpsCertEndpoint=origin+"/v1/https-cert-preflight";
   const payInfo={
     protocols:["x402"],
     price:{mode:"fixed",currency:"USD",amount:"0.01"},
@@ -57,6 +58,11 @@ export function makeDiscovery(origin) {
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
       "/v1/glb-sample":{get:{summary:"Free original self-produced 3D model metadata preview",operationId:"readGlbMetadataSample",security:[],responses:{"200":{description:"Not a paid customer job; public sample with private source retained."}}}},
+      "/v1/tls-certificate-sample":{get:{
+        tags:["Public TLS"],summary:"Free explicitly fictional public TLS certificate report illustration",
+        operationId:"tlsCertFreeFictionalExample",security:[],
+        responses:{"200":{description:"Synthetic certificate data, no actual TLS request or paid buyer."}}
+      }},
       "/v1/email-dns-sample":{get:{tags:["Public DNS"],summary:"Free original illustrative email DNS configuration preview",operationId:"readEmailDnsSample",security:[],responses:{"200":{description:"Synthetic DNS only, zero paid verification or real DNS claim."}}}},
       "/v1/csv-sample":{get:{tags:["Data Quality"],summary:"Free original synthetic CSV sample and QA product scope",operationId:"readCSVStructuralPreflightSample",security:[],responses:{"200":{description:"Public synthetic CSV example, paid CSV report offer, not a paid customer test."}}}},
       "/v1/x402-sample":{get:{tags:["Payment Protocol"],summary:"Free deliberately fictional x402 quote analysis sample",operationId:"publicX402QuoteSample",security:[],responses:{"200":{description:"Original public-source fake quote, no valid seller or payment."}}}},
@@ -136,6 +142,28 @@ export function makeDiscovery(origin) {
           "402":{description:"Pay 0.005 native Circle Base USDC through x402 before returning CSV report.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
           "413":{description:"Too-large body, no payment."},
           "429":{description:"Preflight rate limit, no payment."}
+        }
+      }},
+      "/v1/https-cert-preflight":{get:{
+        tags:["Public TLS"],summary:"Public HTTPS certificate expiry and trust preflight for 0.005 Base USDC",
+        operationId:"tlsCertificateExpiryPreflight",security:[{x402Payment:[]}],
+        description:"Public domain-only pinned-global-IPv4 SNI TLS certificate metadata. Validity dates, issuer, hostname match and local CA trust, no HTTP request, DNS rebinding to private IP, secrets, site ownership, web-content security or revocation certification. Domain invalid or public TLS inaccessible fails BEFORE payment.",
+        "x-payment-info":receiptPayInfo,
+        parameters:[{name:"domain",in:"query",required:false,
+          description:"Fully-qualified public DNS name only, not URL/email/private IP/port; default github.com",
+          schema:{type:"string",minLength:4,maxLength:253,example:"github.com",default:"github.com"}}],
+        responses:{
+          "200":{description:"Paid read-only observed public certificate metadata, only after genuine independent payment.",
+            content:{"application/json":{schema:{type:"object",
+              properties:{ok:{type:"boolean"},paid:{type:"boolean"},chargedUSDC:{type:"string"},
+                kind:{type:"string"},domain:{type:"string"},certificateExpiresAtUTC:{type:"string"},
+                daysUntilExpiry:{type:"integer"},chainAuthorized:{type:"boolean"},
+                hostnameMatches:{type:"boolean"},certificateTrustAndHostnameVerified:{type:"boolean"}}}}}},
+          "400":{description:"Invalid/unroutable/unsafe input rejected before billing."},
+          "402":{description:"x402 v2 Base native Circle USDC exact 5000 atomic payment required.",
+            headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
+          "429":{description:"Read-only request rate limit reached."},
+          "503":{description:"Public certificate source unavailable: no payment demanded."}
         }
       }},
       "/v1/email-dns-preflight":{get:{
@@ -221,8 +249,8 @@ export function makeDiscovery(origin) {
   };
   const wellKnown={
     version:1,
-    resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint,lowpolyEndpoint,csvReportEndpoint,csvPreflightEndpoint,x402QuoteEndpoint,emailDnsEndpoint],
-    instructions:"New 0.005 Base native CircleUSDC public email DNS MX/SPF/DMARC check GET /v1/email-dns-preflight and free illustrative /v1/email-dns-sample; no verified buyer for this new route, DNS errors before charging. New 0.01 Base native CircleUSDC GET /v1/x402-preflight reviews public unsigned x402 v2 402 quotes without network fetch or signed data; free GET /v1/x402-sample, source original same-owner VM3 adapted by VM5. Buyer demand for CSV structural preflight observed in public NoHumans search logs. New 0.005 Base native USDC GET /v1/csv-report returns one full reproducible synthetic anomaly pack, POST /v1/csv-preflight audits <=32KB buyer CSV in memory. Invalid inputs rejected BEFORE charge. Paid GET /v1/generate-lowpoly generates an AI-assisted as-is non-exclusive original GLB binary for 0.05 Base Circle USDC, default lantern seed0. POST /v1/analyze-glb reviews GLB metadata for 0.01USDC. GET /v1/x402-template serves an API starter 0.01USDC, POST /v1/lint analyzes OpenAPI 0.01USDC, GET /v1/base-usdc-receipt verifies a public Base native Circle USDC Transfer 0.005USDC. Inputs validated before any charge. GET /v1/lowpoly-sample and /v1/glb-sample free. AI-assisted source public, no exclusive IP claim. Two historic separate paid template and CSV receipts total 0.015 native BaseUSDC from the SAME NoHumans automated scout; no additional new route sales proven.",
+    resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint,lowpolyEndpoint,csvReportEndpoint,csvPreflightEndpoint,x402QuoteEndpoint,emailDnsEndpoint,httpsCertEndpoint],
+    instructions:"New $0.005 HTTPS certificate trust/expiry preflight GET /v1/https-cert-preflight and free fictional /v1/tls-certificate-sample, only bounded public IPv4 pinned TLS, no HTTP/SMTP and NO verified paid orders yet. New 0.005 Base native CircleUSDC public email DNS MX/SPF/DMARC check GET /v1/email-dns-preflight and free illustrative /v1/email-dns-sample; no verified buyer for this new route, DNS errors before charging. New 0.01 Base native CircleUSDC GET /v1/x402-preflight reviews public unsigned x402 v2 402 quotes without network fetch or signed data; free GET /v1/x402-sample, source original same-owner VM3 adapted by VM5. Buyer demand for CSV structural preflight observed in public NoHumans search logs. New 0.005 Base native USDC GET /v1/csv-report returns one full reproducible synthetic anomaly pack, POST /v1/csv-preflight audits <=32KB buyer CSV in memory. Invalid inputs rejected BEFORE charge. Paid GET /v1/generate-lowpoly generates an AI-assisted as-is non-exclusive original GLB binary for 0.05 Base Circle USDC, default lantern seed0. POST /v1/analyze-glb reviews GLB metadata for 0.01USDC. GET /v1/x402-template serves an API starter 0.01USDC, POST /v1/lint analyzes OpenAPI 0.01USDC, GET /v1/base-usdc-receipt verifies a public Base native Circle USDC Transfer 0.005USDC. Inputs validated before any charge. GET /v1/lowpoly-sample and /v1/glb-sample free. AI-assisted source public, no exclusive IP claim. Two historic separate paid template and CSV receipts total 0.015 native BaseUSDC from the SAME NoHumans automated scout; no additional new route sales proven.",
     claim:"Discovery is NOT payment. Two separately settled and delivered actual native BaseUSDC x402 receipts: template 0.01 and CSV 0.005 to SAME external NoHumans scout on 2026-10-19. See free GET /v1/sales-proof; all remaining routes including email DNS have zero confirmed buyer purchases."
   };
   return {spec,wellKnown};
