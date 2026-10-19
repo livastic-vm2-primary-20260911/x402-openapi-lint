@@ -36,7 +36,7 @@ test("Free synthetic CSV source sample is transparent, zero fake orders and no x
  assert.equal(r.status,200);assert.equal(r.headers.get("PAYMENT-REQUIRED"),null);
  const d=await r.json();
  assert.equal(d.paid,false);assert.equal(d.priceUSDC,"0.005");
- assert.equal(d.confirmedCsvPaidOrders,0);
+ assert.equal(d.confirmedCsvPaidOrders,1);
  assert.ok(d.sampleCsv.includes("email,amount,date,note"));
  assert.ok(d.disclosure.includes("reproducible"));
 });

@@ -24,6 +24,27 @@ test("First actual independent x402 buyer sale source is free, exact onchain buy
  assert.equal(o.responseSchemaValidated,true);
  assert.ok(o.externalSellerListing.endsWith("7fb76f81-0b5"));
 });
+test("Second independent CSV scout purchase is a distinct genuine Base native USDC receipt",async()=>{
+ const r=await fetch(BASE+"/v1/sales-proof");
+ const o=await r.json();
+ assert.equal(r.status,200);
+ assert.equal(o.allVerifiedDistinctPaidApiCalls,2);
+ assert.equal(o.totalActuallyReceivedNativeBaseCircleUSDC,"0.015");
+ const x=o.secondCsvPaidReceipt;
+ assert.equal(x.endpoint,"GET /v1/csv-report");
+ assert.equal(x.paidNativeCircleBaseUSDC,"0.005");
+ assert.equal(x.paidVerified,true);
+ assert.equal(x.delivered,true);
+ assert.equal(x.schemaValidated,true);
+ assert.equal(x.logIndex,1201);
+ assert.equal(x.chainId,8453);
+ assert.equal(x.token,EXPECTED_TOKEN);
+ assert.equal(x.txHash,"0xc0c69aa8709b848ab3c0d521ac6540e019738f0804565dfe19652bcb3c290838");
+ assert.equal(x.to.toLowerCase(),o.recipientPublicAddress.toLowerCase());
+ assert.equal(x.from.toLowerCase(),o.independentBuyerPublicScout.toLowerCase());
+ assert.equal(x.sameIndependentAutomatedScoutBuyerAsFirst,true);
+ assert.ok(x.listing.endsWith("816d6709-3d0"));
+});
 test("Never accidentally claim 3D generator sales or fiat cashout based on template purchase",async()=>{
  const r=await fetch(BASE+"/v1/sales-proof");
  const o=await r.json();

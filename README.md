@@ -1,8 +1,7 @@
 # VM5 x402 OpenAPI Lint — paid API pilot
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
-**Launch status:** ONE genuine independent 0.01 native Base Circle USDC API purchase was paid, chain-settled and successfully delivered to the NoHumans scout on 2026-10-19. This purchase is supported by official paid verification and the Base mainnet transfer. Other routes remain without proven paying customers. See [first real sale proof](docs/FIRST_ACTUAL_PAID_SALE_20261019.md). Local tests: 87/87 passed; test-mode payments are not counted as sales.
-
+**Launch status 2026-10-19: TWO separate genuine paid x402 API deliveries totaling 0.015 native Base Circle USDC.** ONE independent NoHumans automated paid verification scout paid 0.010000 for the original OpenAPI template and a separate 0.005000 for the synthetic CSV quality report. They are TWO on-chain USDC transfers, NOT two organic paying human customers or recurring subscriptions. Fiat USD bank cashout remains 0, true post-cost profit unknown. [First template receipt](docs/FIRST_ACTUAL_PAID_SALE_20261019.md) and [second CSV receipt](docs/SECOND_ACTUAL_PAID_CSV_SALE_20261019.md) include source and Base transaction proof. All other routes have no proven paying buyers. Mock test payments never count.\n
 **Original technical build log and disclosure:** [How I tested the x402 payment lifecycle without faking revenue](https://dev.to/livasticvm5primary20260911/a-002-x402-api-for-openapi-linting-what-i-actually-tested-47jf).
 
 ## Free sample and paid call
@@ -56,7 +55,7 @@ Latest VM5 local tests include the dedicated GET template, isolated mock x402 pa
 
 - Only a real independent x402 client payment can unlock the JSON proof. The service never signs a user wallet, spends funds, charges gas, assumes custody, or accesses seed/private keys.
 - A valid token Transfer event is NOT proof of invoice intent, buyer legal identity, non-reversibility or full payment finality. The 12-block confirmation window is heuristic. Public chain transaction and wallet data sent to the public RPC may be visible to that upstream provider.
-- Original local test suite for the now-expanded service **87/87 PASS** with a mock facilitator and local mock Base JSON-RPC, 0 real test USDC. A separate **read-only historical third-party Base USDC transaction** passed the same proof logic with 48 confirmations, but its money went to an unrelated public wallet, NOT to VM5. Production real buyer-paid settlement remains unverified and received VM5 USDC0.
+- Original local test suite for the now-expanded service **87/87 PASS** with a mock facilitator and local mock Base JSON-RPC, 0 real test USDC. A separate **read-only historical third-party Base USDC transaction** passed the same proof logic with 48 confirmations, but its money went to an unrelated public wallet, NOT to VM5. That was an earlier historical local-test-only snapshot before the later two real buyer-funded transactions shown at the top of this README.
 
 ## Safe operations
 

@@ -47,7 +47,7 @@ await resourceServer.initialize(); // Read facilitator /supported before accepti
 const documentation={
   name:"VM5 OpenAPI Lint",
   version:"0.1.0",
-  status:"LIVE — first independent 0.01 native Base Circle USDC purchase, delivered and externally verified on 2026-10-19 (NoHumans scout only); other endpoints not proven paid",
+  status:"LIVE — two genuine distinct paid-and-delivered x402 calls from the SAME independent NoHumans automated scout: template 0.010000 native Base USDC, CSV report 0.005000 native Base USDC; combined 0.015000 token received. No organic repeat human buyer or fiat cashout proven.",
   paid:{
     method:"POST",
     path:"/v1/lint",
@@ -101,8 +101,12 @@ const documentation={
   },
   scope:"Redocly recommended schema/documentation lint, no external $ref, no runtime server access, not a security certification",
   privacy:"Submitted specs are held in memory/temp files only for request processing, deleted after each run; no telemetry or access logging in application code. Cloudflare and the facilitator are separate external services; avoid secrets and client data.",
-  disclosure:"VM5 AI-assisted one-owner API. Exactly one NoHumans independent 0.01 native Base Circle USDC paid and delivered template call verified 2026-10-19; not proof of further customers or repeat demand. Other route sales unverified. No owner fiat cashout or net profit established.",
-  firstVerifiedIndependentPaidSale:{endpoint:"GET /v1/x402-template",amountNativeBaseCircleUSDC:"0.01",distinctDeliveredPurchases:1,fiatCashoutUSD:"0",onchain:"https://basescan.org/tx/0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",officialIndependentProof:"https://nohumans.directory/l/7fb76f81-0b5"}
+  disclosure:"VM5 AI-assisted one-owner API. Two distinct paid delivered API calls 0.01 template and 0.005 CSV report by SAME independent NoHumans auto scout, not two organic buyers or recurring demand. Other route sales unverified except the explicitly proven CSV demo. No owner fiat cashout or net profit established.",
+  firstVerifiedIndependentPaidSale:{endpoint:"GET /v1/x402-template",amountNativeBaseCircleUSDC:"0.01",distinctDeliveredPurchases:1,fiatCashoutUSD:"0",onchain:"https://basescan.org/tx/0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",officialIndependentProof:"https://nohumans.directory/l/7fb76f81-0b5"},
+  secondVerifiedIndependentPaidSale:{endpoint:"GET /v1/csv-report",amountNativeBaseCircleUSDC:"0.005",distinctDeliveredPurchases:1,fiatCashoutUSD:"0",onchain:"https://basescan.org/tx/0xc0c69aa8709b848ab3c0d521ac6540e019738f0804565dfe19652bcb3c290838",officialIndependentProof:"https://nohumans.directory/l/816d6709-3d0"},
+  allVerifiedDistinctPaidApiCalls:2,
+  totalActuallyReceivedNativeBaseCircleUSDC:"0.015",
+  uniqueExternalScoutBuyerWallets:1
 };
 const routes={
   "GET /v1/csv-report":{
@@ -230,6 +234,17 @@ app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
   externalSellerListing:"https://nohumans.directory/l/7fb76f81-0b5",
   exactPaidProduct:"GET /v1/x402-template",
   nativeCircleBaseUSDCReceived:"0.01", verifiedUniquePaidCalls:1,
+  allVerifiedDistinctPaidApiCalls:2,
+  totalActuallyReceivedNativeBaseCircleUSDC:"0.015",
+  secondCsvPaidReceipt:{
+    endpoint:"GET /v1/csv-report",listing:"https://nohumans.directory/l/816d6709-3d0",
+    paidNativeCircleBaseUSDC:"0.005",paidVerified:true,delivered:true,schemaValidated:true,
+    txHash:"0xc0c69aa8709b848ab3c0d521ac6540e019738f0804565dfe19652bcb3c290838",
+    logIndex:1201,chainId:8453,token:"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    from:"0x54e163e9b8edda194d83f46add921bfa5fc5f4e0",to:PAY_TO,
+    dateUTC:"2026-10-19T13:38:49Z",
+    sameIndependentAutomatedScoutBuyerAsFirst:true
+  },
   paidVerified:true,officialProductDelivered:true,responseSchemaValidated:true,
   dateUTC:"2026-10-19T11:34:15Z",chainId:8453,
   USDCAsset:"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
@@ -244,7 +259,7 @@ app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
   paidGlbAuditorPaidCustomers:0,
   otherPaidEndpointCustomersNotProven:true,
   fiatCashoutUSD:"0",trueNetUSD:"UNKNOWN",
-  disclaimer:"One small independently purchased and delivered API template; not an enterprise software contract, verified client testimonial, exclusive IP transfer, sustained demand, USD bank deposit or guaranteed future revenue."
+  disclaimer:"Two small independently purchased/delivered API calls by ONE external automated NoHumans scout (0.01 template + 0.005 CSV); not an enterprise software contract, two organic buyer testimonials, sustained demand, exclusive IP transfer, USD bank cashout or guaranteed future revenue. Legacy top-level transaction fields refer only to the original first call; separate total fields include both unique transactions."
 }));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
 app.get("/v1/csv-sample",(_req,res)=>res.json({
@@ -256,7 +271,7 @@ app.get("/v1/csv-sample",(_req,res)=>res.json({
   issuesPresent:["one duplicate data row","one irregular column count",
     "invalid email/amount/date", "one formula-risk cell","one blank amount"],
   disclosure:"GET paid sample is reproducible from this synthetic data using public code; POST is for buyer-supplied CSV. Charges buy hosted structured report convenience, not exclusive IP or safety certification.",
-  confirmedCsvPaidOrders:0,
+  confirmedCsvPaidOrders:1,
   limits:CSV_LIMITS
 }));
 app.get("/v1/lowpoly-sample",(_req,res)=>res.json({
