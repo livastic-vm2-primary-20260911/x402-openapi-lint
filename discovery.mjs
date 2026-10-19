@@ -37,6 +37,13 @@ export function makeDiscovery(origin) {
       title:"VM5 OpenAPI Lint — x402 micropayment",
       version:"0.1.0",
       description:"AI-assisted OpenAPI lint, GLB delivery, CSV quality and VM3-authored public x402 quote QA hosted by VM5. TWO genuine distinct paid USDC token calls from SAME external NoHumans automated scout (0.01+0.005=0.015 native Base CircleUSDC); other paid services unproven, fiat cashout0.",
+      "x-guidance":[
+        "Use the free GET /health, /llms.txt and /openapi.json endpoints to inspect this service before paying.",
+        "For a no-spend protocol check, send an unsigned GET /v1/ping; expect HTTP 402 and a PAYMENT-REQUIRED header quoting exactly 0.001 native Circle USDC on Base, network eip155:8453. The merchant supports x402 v2; it does not claim MPP, multichain settlement, or Circle Gateway nanopayments. Buyers authorize payments with their own wallet policy. Never send seed phrases, signing keys or bearer tokens in API inputs.",
+        "For public-domain certificate metadata GET /v1/https-cert-preflight?domain=github.com (0.005 USDC); for public email MX/SPF/DMARC checks GET /v1/email-dns-preflight?domain=gmail.com (0.005). Try the free, explicitly synthetic /v1/tls-certificate-sample and /v1/email-dns-sample first.",
+        "GET /v1/csv-report (0.005) delivers a public synthetic CSV quality report, not an analysis of customer data. For your own non-sensitive OpenAPI JSON or YAML string, POST /v1/lint with application/json and a spec string (0.01). GET /v1/x402-template (0.01) delivers a reference template, not an active payment gateway.",
+        "Follow each OpenAPI operation input schema before paying. Invalid inputs can fail before the 402 and public data sources can return 503; do not retry or authorize payment blindly. The Base receipt route is not currently a dependable critical-settlement source. These are bounded developer checks, not security, legal, identity or financial certification. Only two historical outside paid deliveries by one automatic scout were verified, not recurring customer demand."
+      ].join(" "),
       contact:{name:"VM5 Delivery Lab",url:"https://livastic-vm5-primary-20260911.github.io/vm5-delivery-lab/"}
     },
     servers:[{url:origin}],

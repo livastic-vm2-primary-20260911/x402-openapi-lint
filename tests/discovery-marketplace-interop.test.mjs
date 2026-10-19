@@ -81,3 +81,23 @@ test("Receipt preview is free and distinct from paid settlement verifier",()=>{
  assert.equal(d.wellKnown.resources.length,11);
  assert.equal(d.wellKnown.resources.includes("https://vm5-openapi-x402.onrender.com/v1/receipt-sample"),false);
 });
+
+test("Circle-compatible agent guidance reflects actually payable Base x402 routes without misleading claims",()=>{
+  const {spec}=makeDiscovery(ORIGIN);
+  const guidance=spec.info["x-guidance"];
+  assert.equal(typeof guidance,"string");
+  assert.ok(guidance.length>300 && guidance.length<3000);
+  assert.ok(guidance.split(/\s+/).length<750,"keep agent guidance comfortably under a 1000-token budget");
+  for(const required of ["/v1/ping","/v1/lint","/v1/x402-template","/v1/csv-report",
+    "/v1/https-cert-preflight","/v1/email-dns-preflight","/llms.txt","eip155:8453","0.001","0.005","0.01",
+    "PAYMENT-REQUIRED"]){
+    assert.ok(guidance.includes(required),"agent guidance must include "+required);
+  }
+  assert.equal(spec.info.contact.url,"https://livastic-vm5-primary-20260911.github.io/vm5-delivery-lab/");
+  assert.equal(spec.info.contact.email,undefined,"do not publish an unverified or private business email");
+  assert.match(guidance,/not currently a dependable critical-settlement source/);
+  assert.match(guidance,/not recurring customer demand/);
+  assert.match(guidance,/not claim MPP, multichain settlement/i);
+  assert.deepEqual(spec.paths["/v1/ping"].get["x-payment-info"].price,{mode:"fixed",currency:"USD",amount:"0.001"});
+  assert.equal(spec.paths["/v1/x402-template"].get["x-payment-info"].price.amount,"0.01");
+});
