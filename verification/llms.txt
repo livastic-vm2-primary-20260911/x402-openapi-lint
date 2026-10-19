@@ -17,6 +17,7 @@
 - GET /v1/lowpoly-sample — procedurally generated 3D asset preview.
 - GET /v1/glb-sample — synthetic glTF 2 geometry-report preview.
 - GET /v1/email-dns-sample — *fictional* MX/SPF/DMARC illustration, not a live domain test.
+- GET /v1/tls-certificate-sample — *fictional* certificate report; real public TLS not queried in the sample.
 - GET /v1/x402-sample — *fictional* public unsigned x402 quote structural analysis.
 - GET /v1/receipt-sample — *fictional* USDC transaction validation report, NOT an observed chain receipt.
 
@@ -28,6 +29,7 @@ Payment asset: native Circle USDC on Base chain eip155:8453 (ERC-20 contract 0x8
 - GET /v1/csv-report — 0.005000 USDC. Structured QA report for transparent synthetic CSV.
 - POST /v1/csv-preflight — 0.005000 USDC. Bounded buyer-supplied CSV structural QA; reject malformed input before charging. Do not submit personal or confidential data.
 - GET /v1/email-dns-preflight?domain=example.org — 0.005000 USDC. Public DNS MX/SPF/DMARC/A configuration; NOT mailbox existence or real email deliverability certification.
+- GET /v1/https-cert-preflight?domain=github.com — 0.005000 USDC. Public HTTPS TLS X.509 validity/issuer/hostname and local CA-chain status, bounded pinned globally routable IPv4 port 443 only; no HTTP request, IP/URL/customer private endpoint, revocation/CT audit or security certification. Free synthetic preview above; NEW product actual paying customers zero.
 - GET /v1/x402-preflight — 0.010000 USDC. Bounded public *unsigned* x402 v2 quote syntax analysis; optional public JSON/Base64 quote; DOES NOT validate seller identity or actual settlement.
 - GET /v1/base-usdc-receipt?tx=PUBLIC_HASH&recipient=PUBLIC_WALLET&minUsdc=0.005000 — 0.005000 USDC, only for a real sufficiently confirmed valid Base USDC transfer, otherwise free 400/404/409/422/425. Does not certify invoice agreement.
 - GET /v1/generate-lowpoly — 0.050000 USDC. Deterministic original nonexclusive as-is procedural GLB output; optional kind/seed.
