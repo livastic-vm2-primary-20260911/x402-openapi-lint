@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { paymentMiddleware } from "@x402/express";
 import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
+import { declareDiscoveryExtension, bazaarResourceServerExtension } from "@x402/extensions/bazaar";
 import {parseAndGuardSpec,lintSpec,REDOCLY_VERSION,LIMIT_BYTES} from "./validator.mjs";
 import {makeDiscovery} from "./discovery.mjs";
 import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt.mjs";
@@ -36,6 +36,7 @@ if(paymentTemplateReport.errors!==0 || paymentTemplateReport.warnings!==0)throw 
 const facilitator=new HTTPFacilitatorClient({url:FACILITATOR_URL});
 const resourceServer=new x402ResourceServer(facilitator);
 resourceServer.register("eip155:*",new ExactEvmScheme());
+resourceServer.registerExtension(bazaarResourceServerExtension);
 await resourceServer.initialize(); // Read facilitator /supported before accepting x402 challenges.
 
 const documentation={
@@ -94,8 +95,16 @@ const documentation={
 const routes={
   "GET /v1/generate-lowpoly":{
     accepts:{scheme:"exact",price:"$0.05",network:NETWORK,payTo:PAY_TO},
-    description:"Generate one AI-assisted original procedural low-poly glTF 2.0 GLB model via public-source deterministic generator. Default lantern/seed0, or kind=marker, seed 0..999999. The output is as-is non-exclusive hosted computation/delivery. No prior customer sales/Unity certification/exclusive model rights are claimed.",
-    mimeType:"application/json"
+    description:"Generate original AI-assisted procedural low-poly GLB 2.0 bytes by public-source algorithm for 0.05 native Circle Base USDC. Default lantern, seed 0. Non-exclusive as-is convenience; no exclusive asset copyright or engine certification.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{
+        ok:true,paid:true,chargedUSDC:"0.05",network:NETWORK,
+        kind:"lantern",seed:0,fileName:"lastone_lantern_0.glb",
+        triangles:284,materials:8,format:"GLB 2.0"
+      }}
+    })
   },
   "POST /v1/analyze-glb":{
     accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
@@ -120,8 +129,17 @@ const routes={
   },
   "GET /v1/x402-template":{
     accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
-    description:"Machine-readable verified OpenAPI 3.0.3 x402 payment template with honest payment header schemas, errors, and zero lint defects.",
-    mimeType:"application/json"
+    description:"Machine-readable original OpenAPI 3.0.3 x402 payment starter with zero Redocly lint findings. An original as-is reference download, not an audited production payment service.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{
+        ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
+        kind:"x402_v2_openapi_starter",templateFormat:"YAML",
+        openapiTemplate:"openapi: 3.0.3",
+        redocly:{errors:0,warnings:0}
+      }}
+    })
   }
 };
 const payment=paymentMiddleware(routes,resourceServer,undefined,undefined,false);

@@ -117,3 +117,34 @@ game-asset utility on the original VM5 Base USDC seller (no new infrastructure c
 
 Unlike POST /v1/analyze-glb, this GET route needs no buyer-provided GLB bytes
 and is compatible with free x402 crawler discovery that performs unpaid GETs.
+
+
+## CDP Bazaar discovery compatibility (pre-indexing, not revenue)
+
+Our original x402 resource server registers the official Bazaar server extension
+from pinned @x402/extensions. Existing GET /v1/x402-template ($0.01 Base native
+Circle USDC, no request inputs) and GET /v1/generate-lowpoly ($0.05, optional
+query but valid without inputs) expose extensions.bazaar in the HTTP402
+PAYMENT-REQUIRED response, with an accurate machine-readable JSON output example.
+This improves discovery without changing the payee, token, chain, accepted
+amount or actual settlement.
+
+Coinbase CDP publishes a free, read-only seller preflight:
+
+POST https://api.cdp.coinbase.com/platform/v2/x402/validate
+Content-Type: application/json
+{"resource":"https://vm5-openapi-x402.onrender.com/v1/x402-template","method":"GET"}
+
+Technical validation must return valid:true and simulation.outcome:accepted.
+That is not a buyer purchase, Base USDC receipt, or Bazaar indexing.
+Coinbase requires a separate genuinely independent real customer payment
+successfully settled through the CDP Facilitator to index a resource.
+Another directory's listing, HTTP402 price challenge, local simulator and
+unsigned payment request do NOT satisfy the CDP indexing requirement.
+
+The merchant still uses its original facilitator. Switching to CDP requires
+legitimate developer API credentials and compliant authorized configuration,
+plus independently verified real settlement. Never fabricate identity/KYC,
+print bearer/private keys, sign the owner's MetaMask, fund own test purchases,
+or represent metadata/probes as real revenue. Preserve existing working
+native Base USDC payment routes while that blocker is unresolved.
