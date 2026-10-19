@@ -73,3 +73,11 @@ test("Public merchant discovery publishes actual paid JSON output schemas",()=>{
   assert.deepEqual(template.properties.templateFormat.enum,["YAML"]);
   assert.equal(template.properties.chargedUSDC.example,"0.01");
 });
+
+test("Receipt preview is free and distinct from paid settlement verifier",()=>{
+ const d=makeDiscovery("https://vm5-openapi-x402.onrender.com");
+ assert.deepEqual(d.spec.paths["/v1/receipt-sample"].get.security,[]);
+ assert.equal(d.spec.paths["/v1/base-usdc-receipt"].get["x-payment-info"].price.amount,"0.005");
+ assert.equal(d.wellKnown.resources.length,9);
+ assert.equal(d.wellKnown.resources.includes("https://vm5-openapi-x402.onrender.com/v1/receipt-sample"),false);
+});

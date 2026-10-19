@@ -59,6 +59,12 @@ export function makeDiscovery(origin) {
       "/v1/email-dns-sample":{get:{tags:["Public DNS"],summary:"Free original illustrative email DNS configuration preview",operationId:"readEmailDnsSample",security:[],responses:{"200":{description:"Synthetic DNS only, zero paid verification or real DNS claim."}}}},
       "/v1/csv-sample":{get:{tags:["Data Quality"],summary:"Free original synthetic CSV sample and QA product scope",operationId:"readCSVStructuralPreflightSample",security:[],responses:{"200":{description:"Public synthetic CSV example, paid CSV report offer, not a paid customer test."}}}},
       "/v1/x402-sample":{get:{tags:["Payment Protocol"],summary:"Free deliberately fictional x402 quote analysis sample",operationId:"publicX402QuoteSample",security:[],responses:{"200":{description:"Original public-source fake quote, no valid seller or payment."}}}},
+      "/v1/receipt-sample":{get:{
+        tags:["Payment Proof"],summary:"Free explicitly fictional Base USDC receipt verifier preview",
+        operationId:"getFreeSyntheticUSDCReceiptExample",security:[],
+        description:"Static clearly invented transaction hash and addresses illustrate fields only. NOT onchain proof, a live RPC query, received funds, x402 signature or payment.",
+        responses:{"200":{description:"Free synthetic receipt structure, paid service link, limitations and zero paid client disclosure."}}
+      }},
       "/v1/sales-proof":{get:{
         summary:"Free, independently verifiable first real Base USDC buyer purchase receipt (not fiat)",
         operationId:"originalFirstIndependentPaidX402SaleProof",security:[],

@@ -183,3 +183,19 @@ test("LOCAL MOCK ONLY: fake receipt x402 settlement permits read-only proof",asy
  assert.equal(j.transactionHash,tx);
  assert.ok(r.headers.get("payment-response"));
 });
+
+test("Free receipt preview is honest nonpayable synthetic proof, no transaction or payment",async()=>{
+ const r=await fetch(base+"/v1/receipt-sample");
+ assert.equal(r.status,200);
+ assert.equal(r.headers.get("payment-required"),null);
+ const d=await r.json();
+ assert.equal(d.ok,true);
+ assert.equal(d.paid,false);
+ assert.equal(d.exampleOnly,true);
+ assert.equal(d.chargedUSDC,"0");
+ assert.equal(d.confirmedIndependentPaidOrdersForThisEndpoint,0);
+ assert.match(d.kind,/SYNTHETIC/);
+ assert.match(d.illustrativeOutput.payment,/EXAMPLE ONLY/);
+ assert.match(d.limitations,/invented placeholders/);
+ assert.ok(d.paidEndpoint.endsWith("/v1/base-usdc-receipt"));
+});

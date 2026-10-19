@@ -45,7 +45,7 @@ Full offline test with mock facilitator, no keys or USDC spent:
 
 Latest VM5 local tests include the dedicated GET template, isolated mock x402 payment verification, and the original POST lint parity tests; results must be re-verified after each deployment. This includes a **test-only localhost fake facilitator** that simulates success and rejects an invalid marker, exercising the complete middleware/Redocly/response path **without real payment**. The fake facilitator is not bundled into the production server and is never a public endpoint. npm audit --omit=dev reported zero vulnerabilities at the same time; this is not a guarantee against future advisories.
 
-## New native Base Circle USDC receipt verification — priced in USDC
+## New native Base Circle USDC receipt verification — priced in USDC\n\n**Free buyer preview:** https://vm5-openapi-x402.onrender.com/v1/receipt-sample — a completely invented but clearly labeled JSON fixture showing expected query inputs, proof fields, network/token and limitations. No buyer wallet payment or RPC, customer receipt, claim of an actual transaction, or hidden charge. The associated paid GET /v1/base-usdc-receipt still costs 0.005 native Base Circle USDC only after a successful genuine public receipt preflight. This receipt verifier has **zero independently verified paid customers** as of publication. The other two routes' historic 0.015 external-scout receipts do not apply here.\n
 
 - Paid GET /v1/base-usdc-receipt: **0.005 USDC**, i.e. 5,000 atomic Circle native Base USDC (six decimals).
 - Parameters: tx (0x-prefixed 32-byte transaction hash), recipient (0x-prefixed EVM wallet), minUsdc (positive decimal with up to six places), optional sender (expected token transfer-from address).

@@ -264,6 +264,32 @@ app.get("/v1/email-dns-sample",(_req,res)=>res.status(200).json({
   paidEndpoint:"GET /v1/email-dns-preflight?domain=gmail.com",priceUSDC:"0.005",confirmedIndependentCustomers:0,
   caveat:"A synthetic fixture, not an actual DNS inspection or paid buyer order. Paid endpoint queries live public DNS MX, SPF and DMARC but cannot verify email deliverability, mailbox existence, DKIM selectors or security."
 }));
+app.get("/v1/receipt-sample",(_req,res)=>res.status(200).json({
+  ok:true,paid:false,chargedUSDC:"0",exampleOnly:true,
+  kind:"SYNTHETIC_BASE_CIRCLE_USDC_RECEIPT_FIXTURE_NOT_REAL_CHAIN_DATA",
+  paymentScheme:"x402 v2 Base (chainId 8453) native Circle USDC only",
+  exampleInput:{
+    tx:"0x"+"a".repeat(64),
+    recipient:"0x"+"4".repeat(40),
+    minUsdc:"3.000000",
+    sender:"0x"+"3".repeat(40)
+  },
+  illustrativeOutput:{
+    verifiedNativeUSDCReceipt:true,
+    chainId:8453,
+    transactionHash:"0x"+"a".repeat(64),
+    expectedRecipient:"0x"+"4".repeat(40),
+    expectedSender:"0x"+"3".repeat(40),
+    netIncomingUSDC:"4.000000",
+    minimumUSDC:"3.000000",
+    confirmations:"18",
+    chargedUSDC:"0.005",
+    payment:"EXAMPLE ONLY — not a settled buyer authorization"
+  },
+  paidEndpoint:"GET /v1/base-usdc-receipt",priceNativeBaseCircleUSDC:"0.005",
+  confirmedIndependentPaidOrdersForThisEndpoint:0,
+  limitations:"These addresses, block confirmations and transaction hash are invented placeholders, NOT an observed chain receipt, a verified customer, actual settlement, domain identity, buyer intent or paid result. Replace every sample input with your own PUBLIC real Base native Circle USDC transaction and expected wallet. Real API rejects missing, forged, bridged, unconfirmed, failed and insufficient payments BEFORE requesting any x402 charge."
+}));
 app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
   kind:"original_x402_first_actual_independent_paid_sale",
   source:"NoHumans firstparty paid_verified/paid_verification_latest and independent Base8453 USDC receipt; evidence frozen at 2026-10-19, not live sales analytics.",
