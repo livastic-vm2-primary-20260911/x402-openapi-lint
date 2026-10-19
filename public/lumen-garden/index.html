@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#11192c"><meta name="description" content="Lumen Garden, original responsive no-text HTML5 arcade game">
+<link rel="stylesheet" href="./style.css"><link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<title>Lumen Garden — HTML5 Arcade</title></head>
+<body><main id="game" aria-label="Lumen Garden interactive arcade game">
+<canvas id="scene" aria-label="Collect gold lights, avoid pink spikes"></canvas>
+<section id="cover" role="dialog" aria-label="Game start" class="cover">
+<div class="flower" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><b></b></div>
+<h1>LUMEN<br>GARDEN</h1>
+<div class="motif" aria-hidden="true"><i class="dot"></i><i class="arc"></i><i class="thorn"></i></div>
+<button id="start" type="button" aria-label="Start or replay game"><i></i></button>
+<div class="hint" aria-hidden="true"><svg viewBox="0 0 126 22"><path d="M8 11H118M8 11l10 -7M8 11l10 7M118 11l-10 -7M118 11l-10 7" fill="none" stroke="#b5f7e6" stroke-width="2"/><circle cx="63" cy="11" r="9" fill="#b5f7e6"/></svg></div>
+</section>
+<button id="sound" aria-label="Toggle game sound" aria-pressed="true" type="button"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9Zm12-2c2 2 2 8 0 10M18 4c4 4 4 12 0 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
+<div id="lives" aria-label="Lives remaining"></div><div id="energy" role="progressbar" aria-label="Collected lights" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"></div>
+</main><script src="./game.js" defer></script></body></html>

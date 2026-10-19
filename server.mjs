@@ -250,6 +250,23 @@ app.use((_req,res,next)=>{
   res.setHeader("Referrer-Policy","no-referrer");
   next();
 });
+// Separate entirely FREE original HTML5 game for independent publisher review.
+// It is NOT a metered x402/API request and has no personal/account state.
+// Do not modify the paid API routes, facilitator or settlement configuration.
+const LUMEN_STATIC=path.resolve(DIR,"public/lumen-garden");
+for (const name of ["index.html","game.js","style.css","favicon.svg"])
+  if(!fs.existsSync(path.join(LUMEN_STATIC,name)))throw Error("Publisher demo files missing");
+app.use("/games/lumen-garden",(req,res,next)=>{
+  // The public sandboxed, zero-payment game needs to load inside a publisher's iframe.
+  // Header relaxation is confined to this path; the actual x402 service stays DENY.
+  res.removeHeader("X-Frame-Options");
+  res.setHeader("Content-Security-Policy",
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; "+
+    "connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; "+
+    "form-action 'none'; frame-ancestors *");
+  res.setHeader("Cache-Control","public, max-age=900");
+  next();
+},express.static(LUMEN_STATIC,{index:"index.html",dotfiles:"deny",fallthrough:false,redirect:true}));
 app.get("/",(_req,res)=>res.redirect(302,"/v1/docs"));
 app.get("/.well-known/402index-verify.txt",(_req,res)=>{
   const hash=fs.readFileSync(path.resolve(DIR,"verification/402index-verify.txt"),"utf8").trim();
