@@ -66,6 +66,12 @@ const documentation={
     payment:"x402 v2 EIP-3009 Base USDC signature",
     facilitator:FACILITATOR_URL
   },
+  paidSettlementPing:{
+    method:"GET",path:"/v1/ping",priceUSDC:"0.001",network:NETWORK,
+    purpose:"A tiny real x402 v2 payment handshake integration test. A successfully verified and settled request unlocks the handler; inspect PAYMENT-RESPONSE for settlement details. This is NOT independently audited on-chain finality or buyer identity evidence.",
+    input:"No query, no posted payload, no secrets. Malformed queries are rejected before payment.",
+    confirmedIndependentPaidBuyers:0
+  },
   paidReceipt:{
     method:"GET",path:"/v1/base-usdc-receipt",
     priceUSDC:"0.005",network:NETWORK,
@@ -124,6 +130,17 @@ const documentation={
   uniqueExternalScoutBuyerWallets:1
 };
 const routes={
+  "GET /v1/ping":{
+    accepts:{scheme:"exact",price:"$0.001",network:NETWORK,payTo:PAY_TO},
+    description:"Original low-price x402 v2 integration test: pay 0.001 native Circle Base USDC using your own eligible buyer wallet, and receive a machine-readable 200 response plus the x402 PAYMENT-RESPONSE header. Never submit a wallet seed or private key. Not independent finality proof or recurring user demand.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{ok:true,paid:true,chargedUSDC:"0.001",network:"eip155:8453",
+        kind:"x402_paid_integration_ping",serviceResponseAfterPaymentMiddleware:true,
+        thirdPartyFinalityProof:false}}
+    })
+  },
   "GET /v1/csv-report":{
     accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
     description:"Original demonstration CSV integrity report (duplicate normalized rows, invalid email/number/date, formula injection warning, inconsistent row width). Source CSV and code are public/reproducible; purchase is hosted report convenience, not exclusive IP or customer history.",
@@ -472,6 +489,21 @@ function validateOptionalTemplateFormat(req,res,next){
   }
   next();
 }
+// Small paid x402 v2 integration test. Existing exact payment middleware executes
+// before serving the success object. Test mocks do not count as real receipts.
+app.get("/v1/ping",(req,res,next)=>{
+  if(req.originalUrl!=="/v1/ping" || Object.keys(req.query).length || req.get("Content-Length") || req.get("Transfer-Encoding")){
+    return res.status(400).json({ok:false,charged:false,error:"GET /v1/ping accepts no query parameters or request body."});
+  }
+  next();
+},payment,(_req,res)=>res.status(200).json({
+  ok:true,paid:true,chargedUSDC:"0.001",network:NETWORK,kind:"x402_paid_integration_ping",
+  serviceResponseAfterPaymentMiddleware:true,
+  respondedAtUTC:new Date().toISOString(),
+  paymentResponseHeader:"Inspect PAYMENT-RESPONSE after a valid x402 payment for the middleware's settlement response.",
+  thirdPartyFinalityProof:false,
+  limitations:"The merchant's payment-gated response is not a standalone on-chain finality audit, verified legal buyer identity, paid-invoice agreement, or guaranteed continuous service. No new independent customer is claimed until genuine outside final transfers are proven."
+}));
 app.get("/v1/x402-template",validateOptionalTemplateFormat,echoCanonicalX402ChallengeOnTemplate,payment,(_req,res)=>res.status(200).json({
   ok:true,paid:true,chargedUSDC:"0.01",network:NETWORK,
   kind:"x402_v2_openapi_starter",templateFormat:"YAML",openapiTemplate:paymentTemplate,

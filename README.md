@@ -217,3 +217,8 @@ This is one human-owned AI-assisted x402 report-product hosted by VM5, not serve
 ## Free machine-readable service discovery
 
 [Public /llms.txt](https://vm5-openapi-x402.onrender.com/llms.txt) enumerates each current original x402 paid API with canonical Base Circle USDC price, input preflight restrictions, no-charge sample, public paid-delivery proof and conservative no-recurring-customer disclaimer. This text and every free sample are publicly readable, **not charged** and not new paid buyers. Providing it may improve ForgeMesh discoverability after the scheduled independent probe but does not guarantee a score, listing, purchase, or cashout.
+
+
+## New original 0.001 Base Circle USDC x402 payment handshake
+
+**Paid GET https://vm5-openapi-x402.onrender.com/v1/ping** provides a minimal genuine x402 v2 exact payment integration test for legitimate independently funded thirdparty clients. The unpaid request gets HTTP402 with the canonical PAYMENT-REQUIRED header and 1000 atomic native Base Circle USDC units. A client that signs a payment using its own wallet, settles through the existing unchanged facilitator, and retries may receive a concise 200 JSON response and PAYMENT-RESPONSE. The response only asserts successful service access after its payment middleware; it does not independently audit blockchain finality, identify a buyer, or certify a separate invoice. No secret keys or query input. Unwanted query/body rejected with HTTP400 before a charge. The service has ZERO new independently verified paying users at publication. Historical VM5 other-endpoint 0.015USDC came from ONE unrelated NoHumans automated scout on two calls, not users or income of this new ping route. No user cash or wallet gas is spent on tests or promotion.

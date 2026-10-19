@@ -25,6 +25,7 @@
 
 Payment asset: native Circle USDC on Base chain eip155:8453 (ERC-20 contract 0x833589fCD6eDb6E08f4C7C32D4f71b54bdA02913). The original merchant recipient is publicly declared in each PAYMENT-REQUIRED challenge; independent buyers must verify it and authorize with their **own** lawful wallet. Merely receiving HTTP 402 is NOT a purchase. Do not send private keys, wallet signatures, API tokens or confidential data to an ordinary sample endpoint.
 
+- GET /v1/ping — 0.001000 USDC. Paid x402 v2 native Base Circle USDC integration test: real verified-settled middleware GET returns concise paid 200 + PAYMENT-RESPONSE. No query/body/keys. Not an independent blockchain audit. At launch real independent paid buyers=0. Free check: GET /health.
 - GET /v1/x402-template — 0.010000 USDC. Original x402 v2 OpenAPI YAML starter/reference, as-is.
 - GET /v1/csv-report — 0.005000 USDC. Structured QA report for transparent synthetic CSV.
 - POST /v1/csv-preflight — 0.005000 USDC. Bounded buyer-supplied CSV structural QA; reject malformed input before charging. Do not submit personal or confidential data.
