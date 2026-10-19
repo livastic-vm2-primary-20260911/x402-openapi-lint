@@ -69,14 +69,20 @@ export function probePublicTls(domain,ip){
 }
 
 export async function inspectPublicTlsCertificate(raw,{
-  resolve4=dns.resolve4,probe=probePublicTls,now=()=>new Date()
+  resolve4=dns.resolve4,probe=probePublicTls,now=()=>new Date(),dnsTimeoutMs=TIMEOUT_MS
 }={}){
   const v=validatePublicDomain(raw);
   if(!v.ok)return {ok:false,error:v.error};
   const domain=v.domain;
-  let ips;
-  try{ips=await resolve4(domain);}
-  catch{return {ok:false,error:"PUBLIC_DNS_UNAVAILABLE"};}
+  let ips, timer;
+  try{
+    // DNS cannot hold the expensive public TLS preflight open indefinitely.
+    ips=await Promise.race([
+      resolve4(domain),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error("DNS_TIMEOUT")),dnsTimeoutMs);})
+    ]);
+  }catch{return {ok:false,error:"PUBLIC_DNS_UNAVAILABLE"};}
+  finally{clearTimeout(timer);}
   if(!Array.isArray(ips)||ips.length===0||ips.length>8||
      ips.some(x=>!isPublicIPv4(x)))return {ok:false,error:"NO_EXCLUSIVELY_PUBLIC_IPV4"};
   let cert;

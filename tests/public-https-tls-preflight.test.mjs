@@ -87,6 +87,17 @@ test("unavailable DNS, timeout or missing certificate fails BEFORE payment",asyn
   assert.equal(certless.error,"CERTIFICATE_DATES_NOT_AVAILABLE");
 });
 
+test("unresponsive public DNS is bounded and cannot reach TLS connection or billing",async()=>{
+  let tlsDialed=false;
+  const r=await inspectPublicTlsCertificate("example.com",{...provider,
+    resolve4:()=>new Promise(()=>{}),dnsTimeoutMs:8,
+    probe:async()=>{tlsDialed=true;return fake;}
+  });
+  assert.equal(r.ok,false);
+  assert.equal(r.error,"PUBLIC_DNS_UNAVAILABLE");
+  assert.equal(tlsDialed,false);
+});
+
 test("no added private material or external customer certificate stored",async()=>{
   const x=await inspectPublicTlsCertificate("example.com",provider);
   assert.equal(x.credentialsCollected,false);
