@@ -80,3 +80,40 @@ An agent that legally owns the GLB file can send its **own canonical Base64** GL
 Use a legitimate x402 v2 client; an unsigned request for a valid GLB returns HTTP402 with \`PAYMENT-REQUIRED\`. A compliant payer's wallet authorizes one exact 0.01 **native Circle Base USDC** transfer to the published VM5 recipient and resends the same request with \`PAYMENT-SIGNATURE\`. VM5 holds no buyer key and never pays gas on their behalf. Test-fixture payments in the repository are **NOT real transactions**; there are no verified independent customer purchases until an actual on-chain settlement receipt is recorded. No identity/KYC is represented by a wallet alone.
 
 Security bounds: canonical Base64 only, version2 GLB header, exactly one embedded buffer, up to two JSON/BIN chunks, hard file cap, bounded mesh/accessor/material counts, byte-range checks. Reject remote buffer/image URIs and sparse accessors. Check application status and limitations, not merely HTTP200, before buying. Model geometry metadata/declared local bounds do not prove the model can be safely animated, rendered on every mobile GPU or used commercially.
+
+
+## Original seed-based low-poly GLB generation (0.05 USDC)
+
+A small deterministic GET product for x402 agents buying original, non-exclusive
+game-asset utility on the original VM5 Base USDC seller (no new infrastructure cost).
+
+* Free offer metadata:
+  GET https://vm5-openapi-x402.onrender.com/v1/lowpoly-sample
+* Buyer-payable generated GLB:
+  GET https://vm5-openapi-x402.onrender.com/v1/generate-lowpoly
+* Optional parameters: kind=lantern or kind=marker; seed=0..999999 (default
+  lantern/0). For example:
+  GET /v1/generate-lowpoly?kind=marker&seed=91
+* Correct request first gets HTTP 402 with canonical PAYMENT-REQUIRED for
+  50000 native Circle Base USDC atomic units = 0.05 USDC. Buyer must sign
+  with their own wallet; only successful real facilitator settlement delivers.
+* Paid JSON includes fileName and glbBase64 plus SHA256, geometry/material
+  details, licensing disclosure and code-generation provenance. Decode base64
+  into a binary .glb to use it. 6 representative generated files successfully
+  parsed with actual Three.js GLTFLoader, including correct triangle counts.
+* Generated meshes are simple original AI-assisted procedural vertices and
+  flat colours, no downloaded copyrighted game art, remote assets or private
+  customer data.
+* CRITICAL: The generator code is public source in this repository. Buyers
+  pay for the convenient hosted binary generation and delivery service, NOT
+  exclusive or proprietary source code, guaranteed uniqueness, buyer reviews,
+  exclusive copyright or market traction. Any nonexclusive commercial right
+  granted is strictly limited to rights legally held and licensable by the owner.
+  Unity or Blender import performance has NOT been verified. No client-paid
+  games or standalone game assets have been delivered yet.
+* A passing test-mode fake facilitator and valid HTTP402 quote DO NOT verify
+  any actual on-chain purchase or final owner payout. Only an independently
+  confirmed customer settlement is new revenue, with no self-funded testing.
+
+Unlike POST /v1/analyze-glb, this GET route needs no buyer-provided GLB bytes
+and is compatible with free x402 crawler discovery that performs unpaid GETs.

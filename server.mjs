@@ -10,6 +10,7 @@ import {parseAndGuardSpec,lintSpec,REDOCLY_VERSION,LIMIT_BYTES} from "./validato
 import {makeDiscovery} from "./discovery.mjs";
 import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt.mjs";
 import {parseGlbBase64, MAX_GLB_BYTES} from "./glb-analyzer.mjs";
+import {generateOriginalGlb} from "./procedural-lowpoly-generator.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -68,6 +69,10 @@ const documentation={
     purpose:"Read-only Circle native Base USDC receipt proof with 12-block confirmation gate, net token Transfer logs, strict optional sender, exact integer decimals.",
     caveat:"Successful Transfer log is not invoice settlement, buyer intent, a security audit or proof of account ownership. Invalid/failed/unconfirmed receipts are rejected BEFORE payment."
   },
+  paidLowpoly:{method:"GET",path:"/v1/generate-lowpoly",priceUSDC:"0.05",network:NETWORK,
+    purpose:"Deliver reproducible AI-assisted original procedural GLB 2.0 forest lantern or stone marker as Base64 binary with seed and SHA256. This is an as-is non-exclusive convenience service, not exclusive IP or a paid client commission.",
+    sample:"GET /v1/lowpoly-sample is free. GET /v1/generate-lowpoly defaults to kind=lantern and seed=0; optional kind=marker and integer seed 0..999999.",
+    licence:"Source generator is public; purchase is hosted generation and output delivery only. Rights are as-is, limited to those legally held and licensable by VM5."},
   paidGlb:{method:"POST",path:"/v1/analyze-glb",priceUSDC:"0.01",network:NETWORK,
     purpose:"In-memory non-executing GLB 2 model inspection, geometry/triangles/materials/local bounds, <=1.5MB. No remote fetch, files retained or source distribution.",
     caution:"This is a paid descriptive model metadata review, not a security, copyright or full glTF compliance certification. A developer may need original engine-level tests."},
@@ -87,6 +92,11 @@ const documentation={
   disclosure:"VM5 is an AI-assisted seller. We do not claim settled payments or buyer reviews before verifying receipts."
 };
 const routes={
+  "GET /v1/generate-lowpoly":{
+    accepts:{scheme:"exact",price:"$0.05",network:NETWORK,payTo:PAY_TO},
+    description:"Generate one AI-assisted original procedural low-poly glTF 2.0 GLB model via public-source deterministic generator. Default lantern/seed0, or kind=marker, seed 0..999999. The output is as-is non-exclusive hosted computation/delivery. No prior customer sales/Unity certification/exclusive model rights are claimed.",
+    mimeType:"application/json"
+  },
   "POST /v1/analyze-glb":{
     accepts:{scheme:"exact",price:PRICE,network:NETWORK,payTo:PAY_TO},
     description:"Audit one original or client-provided glTF 2.0 GLB in RAM; return triangles, materials and local geometry bounds. The input must be canonical base64 JSON, 28 bytes to 1.5MB; rejects external buffers/texture URLs. This is not a full glTF parser or malware certification.",
@@ -160,6 +170,17 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+app.get("/v1/lowpoly-sample",(_req,res)=>res.json({
+  ok:true,paid:false,kind:"reproducible_original_lowpoly_glb_generator_preview",
+  kinds:["lantern","marker"],defaultKind:"lantern",seedRange:[0,999999],
+  bytesPerGeneratedModel:"about 17-28KB GLB 2.0",
+  format:"GLB 2.0, Y-up; model-local metre-scale positions; solid-color materials; no external mesh or textures",
+  paidEndpoint:"GET /v1/generate-lowpoly",priceUSDC:"0.05",network:NETWORK,
+  product:"An as-is procedurally generated GLB model byte array returned as base64 after real independent native Base Circle USDC x402 payment.",
+  licensing:"Non-exclusive as-is commercial use only of rights VM5 actually owns and can license; AI-assisted and generator source is public; no exclusivity/Unity runtime certification/seller prior paid orders.",
+  independentPaidBuyers:0,confirmedSettledSalesUSDC:"0",
+  demo:"https://livastic-vm5-primary-20260911.github.io/last-one-3d-survival-demo/props.html"
+}));
 app.get("/v1/glb-sample",(_req,res)=>res.json({ok:true,paid:false,kind:"original_portfolio_metadata_example",
   sampleSource:"Original VM5 portfolio at https://livastic-vm5-primary-20260911.github.io/last-one-3d-survival-demo/props.html",
   examples:[{name:"forest_lantern",triangleCount:380,materialCount:8,localHeightMetres:1.82},
@@ -255,6 +276,28 @@ app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
 });
 
 app.options(["/v1/lint","/v1/analyze-glb"],(_req,res)=>res.status(204).end());
+
+app.get("/v1/generate-lowpoly",(req,res,next)=>{
+  const allowed=Object.keys(req.query);
+  if(allowed.some(k=>!["kind","seed"].includes(k)) || allowed.length>2 ||
+     allowed.some(k=>typeof req.query[k]!=="string")){
+    return res.status(400).json({ok:false,charged:false,error:"Only one kind and one integer seed query parameter are accepted."});
+  }
+  const kind=req.query.kind===undefined?"lantern":req.query.kind;
+  const seedString=req.query.seed===undefined?"0":req.query.seed;
+  if(!["lantern","marker"].includes(kind) || !/^(0|[1-9][0-9]{0,5})$/.test(seedString)){
+    return res.status(400).json({ok:false,charged:false,error:"kind=lantern|marker; seed must be integer in [0,999999]."});
+  }
+  try{
+    res.locals.lowpolyResult=generateOriginalGlb(kind,Number(seedString));
+  }catch{
+    return res.status(503).json({ok:false,charged:false,error:"The deterministic model generator did not complete. No payment required."});
+  }
+  next();
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.lowpolyResult,ok:true,paid:true,chargedUSDC:"0.05",network:NETWORK,
+  product:"AI-assisted original low-poly GLB generator with public source; as-is nonexclusive delivery. No proprietary exclusive code, guarantees, prior customer sales or renderer certification."
+}));
 
 const glbRequestByIp=new Map();
 app.post("/v1/analyze-glb",
