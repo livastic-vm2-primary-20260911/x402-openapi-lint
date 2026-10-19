@@ -256,6 +256,7 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
   if(!/^[0-9a-f]{64}$/.test(hash))return res.status(503).type("text/plain").send("verification file invalid");
   return res.type("text/plain").send(hash);
 });
+app.get("/llms.txt",(_req,res)=>res.status(200).type("text/plain; charset=utf-8").send(fs.readFileSync(path.resolve(DIR,"verification/llms.txt"),"utf8")));
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
 app.get("/v1/email-dns-sample",(_req,res)=>res.status(200).json({

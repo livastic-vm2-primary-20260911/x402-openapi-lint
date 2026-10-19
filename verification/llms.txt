@@ -1,0 +1,48 @@
+# VM5 Delivery Lab — x402 machine-callable developer tools
+
+> Original AI-assisted software APIs operated by ONE human beneficial owner on Base mainnet. This is a paid *tool-output service*, not rented CPU/GPU/VPS capacity. Public source and sample outputs are available without signing or buying.
+
+- Service: https://vm5-openapi-x402.onrender.com/
+- Health: https://vm5-openapi-x402.onrender.com/health
+- OpenAPI 3.1 machine contract: https://vm5-openapi-x402.onrender.com/openapi.json
+- x402 resource manifest: https://vm5-openapi-x402.onrender.com/.well-known/x402
+- Free API/payment terms: https://vm5-openapi-x402.onrender.com/v1/docs
+- Free independently auditable past sale evidence (NOT live analytics): https://vm5-openapi-x402.onrender.com/v1/sales-proof
+- Public source: https://github.com/livastic-vm5-primary-20260911/x402-openapi-lint
+
+## Free previews (no USDC required)
+
+- GET /v1/sample — Redocly OpenAPI lint fixture.
+- GET /v1/csv-sample — synthetic CSV structural QA example; customer data not necessary.
+- GET /v1/lowpoly-sample — procedurally generated 3D asset preview.
+- GET /v1/glb-sample — synthetic glTF 2 geometry-report preview.
+- GET /v1/email-dns-sample — *fictional* MX/SPF/DMARC illustration, not a live domain test.
+- GET /v1/x402-sample — *fictional* public unsigned x402 quote structural analysis.
+- GET /v1/receipt-sample — *fictional* USDC transaction validation report, NOT an observed chain receipt.
+
+## x402 v2 Base mainnet paid API (exact fees per successful paid call)
+
+Payment asset: native Circle USDC on Base chain eip155:8453 (ERC-20 contract 0x833589fCD6eDb6E08f4C7C32D4f71b54bdA02913). The original merchant recipient is publicly declared in each PAYMENT-REQUIRED challenge; independent buyers must verify it and authorize with their **own** lawful wallet. Merely receiving HTTP 402 is NOT a purchase. Do not send private keys, wallet signatures, API tokens or confidential data to an ordinary sample endpoint.
+
+- GET /v1/x402-template — 0.010000 USDC. Original x402 v2 OpenAPI YAML starter/reference, as-is.
+- GET /v1/csv-report — 0.005000 USDC. Structured QA report for transparent synthetic CSV.
+- POST /v1/csv-preflight — 0.005000 USDC. Bounded buyer-supplied CSV structural QA; reject malformed input before charging. Do not submit personal or confidential data.
+- GET /v1/email-dns-preflight?domain=example.org — 0.005000 USDC. Public DNS MX/SPF/DMARC/A configuration; NOT mailbox existence or real email deliverability certification.
+- GET /v1/x402-preflight — 0.010000 USDC. Bounded public *unsigned* x402 v2 quote syntax analysis; optional public JSON/Base64 quote; DOES NOT validate seller identity or actual settlement.
+- GET /v1/base-usdc-receipt?tx=PUBLIC_HASH&recipient=PUBLIC_WALLET&minUsdc=0.005000 — 0.005000 USDC, only for a real sufficiently confirmed valid Base USDC transfer, otherwise free 400/404/409/422/425. Does not certify invoice agreement.
+- GET /v1/generate-lowpoly — 0.050000 USDC. Deterministic original nonexclusive as-is procedural GLB output; optional kind/seed.
+- POST /v1/analyze-glb — 0.010000 USDC. In-memory bounded glTF GLB 2.0 structural metadata, NOT security/copyright certification.
+- POST /v1/lint — 0.010000 USDC. Redocly recommended-rule OpenAPI YAML/JSON lint findings; input invalidity rejected before charging.
+
+For POST request schema, limits and examples, use /openapi.json. No browser connection, human reviewer, referral account or merchant login is required just to inspect free samples and x402 challenge.
+
+## Exact verified payment history and non-claims
+
+On 2026-10-19, ONE independent external NoHumans *automated verification scout* bought two different original VM5 APIs, settled via distinct successful Base native Circle USDC token transfers, and successfully received the paid reports: template 0.010000 USDC and CSV synthetic report 0.005000 USDC. The source and onchain proof are public in /v1/sales-proof. This is **0.015000 native Circle Base USDC historically received**, NOT recurring human customers, subscriptions, fiat bank cashout, or known after-cost profit. All other original VM5 endpoints, including DNS, x402 public quote, USDC receipt validator, GLB generator, GLB analyzer and OpenAPI lint, have no independently proven paid customer orders as of this page.
+
+## Contact
+
+- Public issues: https://github.com/livastic-vm5-primary-20260911/x402-openapi-lint/issues
+- Project: https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab
+
+Only legitimate independent paid-work requests with accepted scope, AI-assistance permission, commercial rights and lawful payout terms will be considered. No paid testimonials, security-certification claims or guarantee of future receipts.

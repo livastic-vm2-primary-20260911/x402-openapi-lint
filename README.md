@@ -212,3 +212,8 @@ An original source archive was provided by the same economic owner operating VM3
 - Original code checks version, acceptance count, exact scheme, Base chain8453, native USDC asset, atomic amount, public payTo ADDRESS FORMAT, and public HTTPS resource URL FORMAT. It does not contact the resource URL, check merchant trust, independently attest payTo ownership, verify actual payment or delivery, or provide security/compliance certification.
 
 This is one human-owned AI-assisted x402 report-product hosted by VM5, not server/CPU/GPU/VPS resource rental. NO independently paid buyer has purchased this new quote QA endpoint as of release; pre-existing two NoHumans scout purchases totaled 0.015 native Circle Base USDC for OTHER template and CSV products and are not sales of this product. No buyer funds, seller signing key, fees or private credentials were accessed during development.
+
+
+## Free machine-readable service discovery
+
+[Public /llms.txt](https://vm5-openapi-x402.onrender.com/llms.txt) enumerates each current original x402 paid API with canonical Base Circle USDC price, input preflight restrictions, no-charge sample, public paid-delivery proof and conservative no-recurring-customer disclaimer. This text and every free sample are publicly readable, **not charged** and not new paid buyers. Providing it may improve ForgeMesh discoverability after the scheduled independent probe but does not guarantee a score, listing, purchase, or cashout.
