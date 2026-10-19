@@ -50,7 +50,7 @@ test("OpenAPI lists non-payable reproducible receipt proof while retaining five 
  const route=d.spec.paths["/v1/sales-proof"];
  assert.ok(route?.get);
  assert.deepEqual(route.get.security,[]);
- assert.equal(d.wellKnown.resources.length,5);
+ assert.equal(d.wellKnown.resources.length,7);
  assert.equal(d.spec["x-discovery"].settlementTestStatus,"ONE_REAL_EXTERNAL_001_USDC_TEMPLATE_PAID_AND_DELIVERED_OCT19");
  assert.ok(d.wellKnown.claim.includes("separately settled"));
 });

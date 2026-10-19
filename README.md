@@ -1,5 +1,4 @@
 # VM5 x402 OpenAPI Lint — paid API pilot
-
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
 **Launch status:** ONE genuine independent 0.01 native Base Circle USDC API purchase was paid, chain-settled and successfully delivered to the NoHumans scout on 2026-10-19. This purchase is supported by official paid verification and the Base mainnet transfer. Other routes remain without proven paying customers. See [first real sale proof](docs/FIRST_ACTUAL_PAID_SALE_20261019.md). Local tests: 87/87 passed; test-mode payments are not counted as sales.
@@ -148,3 +147,53 @@ plus independently verified real settlement. Never fabricate identity/KYC,
 print bearer/private keys, sign the owner's MetaMask, fund own test purchases,
 or represent metadata/probes as real revenue. Preserve existing working
 native Base USDC payment routes while that blocker is unresolved.
+
+
+## Demand-backed CSV data quality preflight — 0.005 native Base USDC
+
+The NoHumans public search demand report at
+https://api.nohumans.directory/v1/demand shows independent search requests
+for "csv preflight" and related CSV quality checks. Public search queries
+are not a guaranteed or already paid customer order.
+
+Free synthetic test data / offer: GET /v1/csv-sample
+Paid complete structured synthetic CSV report: GET /v1/csv-report
+Paid actual caller CSV quality preflight: POST /v1/csv-preflight
+
+Both paid routes cost **0.005 native Circle Base USDC per valid x402 call**.
+The GET demo uses a harmless, openly disclosed synthetic dataset with
+duplicate rows, a malformed width, missing values, invalid email/amount/date
+and one formula-risk cell; source data and generator code are public.
+Purchase pays for convenient machine-readable hosted structured output,
+not exclusive intellectual property or prior customer work.
+
+The POST accepts JSON containing "csvText" (UTF-8 CSV up to 32KB), and
+optional "expectedColumns" (list of up to 40 expected headings).
+Example JSON: {"csvText":"email,amount,date
+qa@example.com,5,2026-10-19",
+"expectedColumns":["email","amount","date"]}.
+Limits: max 500 data rows, 40 columns, 4096 characters per cell. Malformed
+quoting, illegal extra input keys and oversize requests are rejected before
+any 402 payment requirement. A correctly encoded CSV containing defects is
+a valid *paid report*, rather than a rejection; clients should not be
+charged for syntactically malformed data.
+
+Results report duplicate normalized rows, missing values, mismatched
+column counts, leading/trailing whitespace, spreadsheet formula-risk
+prefixes and heuristic email/numeric/ISO-date format issues. Potentially
+dangerous spreadsheet cell prefixes include equals, plus, at-sign and
+non-numeric minus. The application does NOT execute input formulas.
+No original data row cell values are emitted in the paid report; sanitized
+column header labels and anomaly row/column indices may be returned.
+
+**Privacy and scope limitations:** CSV text is processed in-memory without
+application-level persistent CSV storage. Reverse proxies, hosting vendors
+and payment facilitators are independent processors with their own logs.
+NEVER submit passwords, confidential commercial data, regulated personal
+information or wallet seeds. Structural preflight does NOT validate data
+truth, full Excel compliance, financial audit, malware or legal/GDPR
+compliance. The server only returns a bounded, explicitly heuristic report.
+
+These are new products, not proof of new paid buyers. The already verified
+first 0.01 Base Circle USDC NoHumans purchase paid for a different original
+GET x402 template API and remains booked exactly ONCE across all VMs.

@@ -11,6 +11,7 @@ import {makeDiscovery} from "./discovery.mjs";
 import {validateReceiptQuery,preflightBaseUSDCReceipt} from "./base-usdc-receipt.mjs";
 import {parseGlbBase64, MAX_GLB_BYTES} from "./glb-analyzer.mjs";
 import {generateOriginalGlb} from "./procedural-lowpoly-generator.mjs";
+import {inspectCsv,validateCsvInput,DEMO_CSV,CSV_LIMITS} from "./csv-preflight.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -24,6 +25,10 @@ if(!/^0x[0-9a-fA-F]{40}$/.test(PAY_TO))throw Error("PAY_TO must be a valid 20-by
 if(!FACILITATOR_URL.startsWith("https://") && !(process.env.NODE_ENV==="test" && /^http:\/\/127\.0\.0\.1:\d+$/.test(FACILITATOR_URL)))throw Error("Facilitator must be HTTPS in production.");
 if(!Number.isSafeInteger(PORT)||PORT<1024||PORT>65535)throw Error("Invalid PORT");
 
+const demoCsvReport=inspectCsv({csvText:DEMO_CSV,expectedColumns:["email","amount","date","note"]});
+if(!demoCsvReport.ok || demoCsvReport.normalizedDuplicateRows!==1 ||
+   demoCsvReport.spreadsheetFormulaRiskCells!==1 ||
+   demoCsvReport.irregularRows!==1)throw Error("Original synthetic CSV business-value sample changed unexpectedly");
 const sample=fs.readFileSync(path.resolve(DIR,"examples/sample.yaml"),"utf8");
 const sampleReport=await lintSpec(sample);
 if(sampleReport.errors!==0)throw Error("Pinned server Redocly failed on known valid example");
@@ -70,6 +75,12 @@ const documentation={
     purpose:"Read-only Circle native Base USDC receipt proof with 12-block confirmation gate, net token Transfer logs, strict optional sender, exact integer decimals.",
     caveat:"Successful Transfer log is not invoice settlement, buyer intent, a security audit or proof of account ownership. Invalid/failed/unconfirmed receipts are rejected BEFORE payment."
   },
+  paidCsv:{method:"POST",path:"/v1/csv-preflight",priceUSDC:"0.005",network:NETWORK,
+    purpose:"RFC4180-style CSV structural preflight for real buyer CSV bytes. Returns row/column counts, duplicate rows, type mismatches, missing cells and formula injection warnings; never echoes raw row cells or persists uploaded CSV.",
+    schema:{csvText:"UTF8 CSV <=32kb",expectedColumns:"optional nonempty column-name array <=40"},
+    limitations:"Not full spreadsheet compliance, data truth, threat scanning or GDPR certification; do not submit secrets, infrastructure/settlement log separately."},
+  paidCsvDemo:{method:"GET",path:"/v1/csv-report",priceUSDC:"0.005",network:NETWORK,
+    purpose:"Deliver a full machine-readable integrity report of an original synthetic test CSV. No customer data, request inputs or special query; pays for structured ready-to-consume report, which can also be computed from disclosed public sample."},
   paidLowpoly:{method:"GET",path:"/v1/generate-lowpoly",priceUSDC:"0.05",network:NETWORK,
     purpose:"Deliver reproducible AI-assisted original procedural GLB 2.0 forest lantern or stone marker as Base64 binary with seed and SHA256. This is an as-is non-exclusive convenience service, not exclusive IP or a paid client commission.",
     sample:"GET /v1/lowpoly-sample is free. GET /v1/generate-lowpoly defaults to kind=lantern and seed=0; optional kind=marker and integer seed 0..999999.",
@@ -94,6 +105,30 @@ const documentation={
   firstVerifiedIndependentPaidSale:{endpoint:"GET /v1/x402-template",amountNativeBaseCircleUSDC:"0.01",distinctDeliveredPurchases:1,fiatCashoutUSD:"0",onchain:"https://basescan.org/tx/0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",officialIndependentProof:"https://nohumans.directory/l/7fb76f81-0b5"}
 };
 const routes={
+  "GET /v1/csv-report":{
+    accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
+    description:"Original demonstration CSV integrity report (duplicate normalized rows, invalid email/number/date, formula injection warning, inconsistent row width). Source CSV and code are public/reproducible; purchase is hosted report convenience, not exclusive IP or customer history.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"csv_structure_quality_preflight",
+        reportVersion:"1.0",headerColumns:4,dataRows:5,irregularRows:1,
+        normalizedDuplicateRows:1,spreadsheetFormulaRiskCells:1,
+        noRawDataReturned:true}}
+    })
+  },
+  "POST /v1/csv-preflight":{
+    accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
+    description:"Customer-supplied <=32KB CSV structural quality preflight; parsed before payment without storage, does not echo raw CSV cells, reports invalid values only by row/column coordinate. No safety/compliance certification.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"POST",bodyType:"json",
+      input:{csvText:DEMO_CSV,expectedColumns:["email","amount","date","note"]},
+      inputSchema:{type:"object",additionalProperties:false,required:["csvText"],
+        properties:{csvText:{type:"string",maxLength:32768},expectedColumns:{type:"array",items:{type:"string"},maxItems:40}}},
+      output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"csv_structure_quality_preflight",dataRows:5,irregularRows:1,normalizedDuplicateRows:1,spreadsheetFormulaRiskCells:1}}
+    })
+  },
   "GET /v1/generate-lowpoly":{
     accepts:{scheme:"exact",price:"$0.05",network:NETWORK,payTo:PAY_TO},
     description:"Generate original AI-assisted procedural low-poly GLB 2.0 bytes by public-source algorithm for 0.05 native Circle Base USDC. Default lantern, seed 0. Non-exclusive as-is convenience; no exclusive asset copyright or engine certification.",
@@ -212,6 +247,18 @@ app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
   disclaimer:"One small independently purchased and delivered API template; not an enterprise software contract, verified client testimonial, exclusive IP transfer, sustained demand, USD bank deposit or guaranteed future revenue."
 }));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
+app.get("/v1/csv-sample",(_req,res)=>res.json({
+  ok:true,paid:false,kind:"original_synthetic_csv_structural_qa_offer",
+  sampleCsv:DEMO_CSV,requestedExpectedHeaders:["email","amount","date","note"],
+  paidGET:"GET /v1/csv-report",paidPOST:"POST /v1/csv-preflight",
+  priceUSDC:"0.005",network:NETWORK,
+  sourceDataset:"Synthetic original public demo only, no personal/customer data",
+  issuesPresent:["one duplicate data row","one irregular column count",
+    "invalid email/amount/date", "one formula-risk cell","one blank amount"],
+  disclosure:"GET paid sample is reproducible from this synthetic data using public code; POST is for buyer-supplied CSV. Charges buy hosted structured report convenience, not exclusive IP or safety certification.",
+  confirmedCsvPaidOrders:0,
+  limits:CSV_LIMITS
+}));
 app.get("/v1/lowpoly-sample",(_req,res)=>res.json({
   ok:true,paid:false,kind:"reproducible_original_lowpoly_glb_generator_preview",
   kinds:["lantern","marker"],defaultKind:"lantern",seedRange:[0,999999],
@@ -317,7 +364,32 @@ app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
   catch{return res.status(503).json({error:"Discovery host not available."});}
 });
 
-app.options(["/v1/lint","/v1/analyze-glb"],(_req,res)=>res.status(204).end());
+app.options(["/v1/lint","/v1/analyze-glb","/v1/csv-preflight"],(_req,res)=>res.status(204).end());
+
+app.get("/v1/csv-report",(req,res,next)=>{
+  if(Object.keys(req.query).length)return res.status(400).json({ok:false,charged:false,error:"CSV demo report takes no query. POST /v1/csv-preflight for buyer-owned data."});
+  next();
+},payment,(_req,res)=>res.status(200).json({
+  ...demoCsvReport,paid:true,chargedUSDC:"0.005",network:NETWORK,
+  purpose:"Reproducible original demonstration CSV anomaly report; source and analyser publicly available; this is NOT prior paid customer work."
+}));
+
+const csvRate=new Map();
+app.post("/v1/csv-preflight",express.json({limit:"40kb",type:["application/json","application/*+json"]}),(req,res,next)=>{
+  const now=Date.now(),ip=req.ip,previous=csvRate.get(ip);
+  const count=(!previous||now-previous.at>60000)?{at:now,count:0}:previous;
+  count.count++;csvRate.set(ip,count);
+  if(csvRate.size>3000)for(const [key,v] of csvRate)if(now-v.at>60000)csvRate.delete(key);
+  if(count.count>12)return res.status(429).json({ok:false,charged:false,error:"CSV preflight limited to twelve attempts/minute/IP."});
+  if(!req.is("application/json")&&!req.is("application/*+json"))return res.status(415).json({ok:false,charged:false,error:"Use JSON application body."});
+  const checked=inspectCsv(req.body);
+  if(!checked.ok)return res.status(400).json({ok:false,charged:false,error:checked.reason,limits:CSV_LIMITS});
+  res.locals.csvReport=checked;
+  next();
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.csvReport,paid:true,chargedUSDC:"0.005",network:NETWORK,
+  buyerDisclosure:"This is heuristic structural preflight, not a compliance/certification report, source-data proof, or guarantee of customer business results."
+}));
 
 app.get("/v1/generate-lowpoly",(req,res,next)=>{
   const allowed=Object.keys(req.query);

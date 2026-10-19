@@ -9,6 +9,8 @@ export function makeDiscovery(origin) {
   const receiptEndpoint=origin+"/v1/base-usdc-receipt";
   const glbEndpoint=origin+"/v1/analyze-glb";
   const lowpolyEndpoint=origin+"/v1/generate-lowpoly";
+  const csvReportEndpoint=origin+"/v1/csv-report";
+  const csvPreflightEndpoint=origin+"/v1/csv-preflight";
   const payInfo={
     protocols:["x402"],
     price:{mode:"fixed",currency:"USD",amount:"0.01"},
@@ -26,12 +28,13 @@ export function makeDiscovery(origin) {
     info:{
       title:"VM5 OpenAPI Lint — x402 micropayment",
       version:"0.1.0",
-      description:"AI-assisted, transparent OpenAPI YAML/JSON lint via pinned Redocly recommended rules. Free sample available. Paid POST returns structured errors/warnings. Real on-chain payment settlement has NOT been tested.",
+      description:"AI-assisted OpenAPI YAML/JSON lint, original procedural GLB delivery and CSV structure audits. ONE native Base USDC 0.01 external buyer paid and received an x402 template on 2026-10-19; other products not proven sold.",
       contact:{name:"VM5 Delivery Lab",url:"https://livastic-vm5-primary-20260911.github.io/vm5-delivery-lab/"}
     },
     servers:[{url:origin}],
     tags:[{name:"Lint",description:"OpenAPI YAML/JSON developer documentation lint, not a security audit."},
-      {name:"3D Models",description:"AI-assisted original procedural GLB asset generation, only non-exclusive licensable rights."}],
+      {name:"3D Models",description:"AI-assisted original procedural GLB asset generation, only non-exclusive licensable rights."},
+      {name:"Data Quality",description:"Original CSV structural preflight; no raw row cells returned, not legal or security certification."}],
     security:[],
     components:{
       securitySchemes:{
@@ -47,6 +50,7 @@ export function makeDiscovery(origin) {
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
       "/v1/glb-sample":{get:{summary:"Free original self-produced 3D model metadata preview",operationId:"readGlbMetadataSample",security:[],responses:{"200":{description:"Not a paid customer job; public sample with private source retained."}}}},
+      "/v1/csv-sample":{get:{tags:["Data Quality"],summary:"Free original synthetic CSV sample and QA product scope",operationId:"readCSVStructuralPreflightSample",security:[],responses:{"200":{description:"Public synthetic CSV example, paid CSV report offer, not a paid customer test."}}}},
       "/v1/sales-proof":{get:{
         summary:"Free, independently verifiable first real Base USDC buyer purchase receipt (not fiat)",
         operationId:"originalFirstIndependentPaidX402SaleProof",security:[],
@@ -88,6 +92,35 @@ export function makeDiscovery(origin) {
           "400":{description:"Unsupported format or unexpected query parameter, rejected before payment."},
           "402":{description:"x402 Base USDC signed payment required.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"},description:"Base64 x402 v2 payment requirements, amount 10000 USDC atomic units."}}},
           "429":{description:"Request rate limited before any payment."}
+        }
+      }},
+      "/v1/csv-report":{get:{
+        tags:["Data Quality"],summary:"Reproducible synthetic CSV anomaly report for 0.005 native Base USDC",
+        operationId:"buyOriginalCSVDemoReport",security:[{x402Payment:[]}],
+        description:"Buyer pays for convenient fully structured report of publicly disclosed synthetic CSV. Reports duplicate records, missing cells, bad types and spreadsheet formula-risk indicators. Code and data reproducible, not proprietary IP or client sale.",
+        "x-payment-info":receiptPayInfo,
+        responses:{
+          "200":{description:"Paid structured report for synthetic CSV (no real customer rows).",content:{"application/json":{schema:{type:"object",required:["ok","paid","chargedUSDC","dataRows","warnings"],properties:{ok:{type:"boolean"},paid:{type:"boolean"},chargedUSDC:{type:"string",example:"0.005"},dataRows:{type:"integer"},normalizedDuplicateRows:{type:"integer"},warnings:{type:"array",items:{type:"string"}},noRawDataReturned:{type:"boolean"}}}}}},
+          "400":{description:"Unexpected query parameter, rejected before charge."},
+          "402":{description:"Pay 0.005 native Base Circle USDC to receive the full audit report.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}}
+        }
+      }},
+      "/v1/csv-preflight":{post:{
+        tags:["Data Quality"],summary:"Audit user-supplied CSV structural data quality for 0.005 native Base USDC",
+        operationId:"auditCSVStructure",security:[{x402Payment:[]}],
+        description:"Customer submits UTF-8 CSV up to 32KB and optional expectedColumns up to 40. Report reveals only headers and row/column positions of anomalies, no raw data rows. CSV inspected in memory; separate infrastructure logs may apply. Invalid input is rejected before payment.",
+        "x-payment-info":receiptPayInfo,
+        requestBody:{required:true,content:{"application/json":{schema:{type:"object",additionalProperties:false,required:["csvText"],properties:{
+          csvText:{type:"string",maxLength:32768,description:"UTF-8 CSV, no NUL, <=32KB, max 500 data rows and 40 columns. Never submit secrets."},
+          expectedColumns:{type:"array",items:{type:"string"},maxItems:40}}},example:{
+            csvText:"email,amount,date,note\\na@example.com,12.5,2026-10-19,paid\\na@example.com,12.5,2026-10-19,paid\\nbad-email,not-a-number,2026-13-99,=1+1",
+            expectedColumns:["email","amount","date","note"]}}}},
+        responses:{
+          "200":{description:"Paid structured CSV findings, not an audited database or GDPR certification.",content:{"application/json":{schema:{type:"object",required:["ok","paid","chargedUSDC","dataRows","columns","issues"],properties:{ok:{type:"boolean"},paid:{type:"boolean"},chargedUSDC:{type:"string",example:"0.005"},dataRows:{type:"integer"},columns:{type:"array",items:{type:"object"}},issues:{type:"array",items:{type:"object"}},noRawDataReturned:{type:"boolean"}}}}}},
+          "400":{description:"Malformed CSV, invalid JSON fields, excess rows/columns, rejected before payment."},
+          "402":{description:"Pay 0.005 native Circle Base USDC through x402 before returning CSV report.",headers:{"PAYMENT-REQUIRED":{schema:{type:"string"}}}},
+          "413":{description:"Too-large body, no payment."},
+          "429":{description:"Preflight rate limit, no payment."}
         }
       }},
       "/v1/generate-lowpoly":{get:{
@@ -146,8 +179,8 @@ export function makeDiscovery(origin) {
   };
   const wellKnown={
     version:1,
-    resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint,lowpolyEndpoint],
-    instructions:"Paid GET /v1/generate-lowpoly generates an AI-assisted as-is non-exclusive original GLB binary for 0.05 Base Circle USDC, default lantern seed0. POST /v1/analyze-glb reviews GLB metadata for 0.01USDC. GET /v1/x402-template serves an API starter 0.01USDC, POST /v1/lint analyzes OpenAPI 0.01USDC, GET /v1/base-usdc-receipt verifies a public Base native Circle USDC Transfer 0.005USDC. Inputs validated before any charge. GET /v1/lowpoly-sample and /v1/glb-sample free. AI-assisted source public, no exclusive IP claim. No actual independent settled sales yet.",
+    resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint,lowpolyEndpoint,csvReportEndpoint,csvPreflightEndpoint],
+    instructions:"Buyer demand for CSV structural preflight observed in public NoHumans search logs. New 0.005 Base native USDC GET /v1/csv-report returns one full reproducible synthetic anomaly pack, POST /v1/csv-preflight audits <=32KB buyer CSV in memory. Invalid inputs rejected BEFORE charge. Paid GET /v1/generate-lowpoly generates an AI-assisted as-is non-exclusive original GLB binary for 0.05 Base Circle USDC, default lantern seed0. POST /v1/analyze-glb reviews GLB metadata for 0.01USDC. GET /v1/x402-template serves an API starter 0.01USDC, POST /v1/lint analyzes OpenAPI 0.01USDC, GET /v1/base-usdc-receipt verifies a public Base native Circle USDC Transfer 0.005USDC. Inputs validated before any charge. GET /v1/lowpoly-sample and /v1/glb-sample free. AI-assisted source public, no exclusive IP claim. No actual independent settled sales yet.",
     claim:"Discovery is NOT payment; one independent 0.01 Base native Circle USDC x402 template purchase was separately settled and delivered (NoHumans scout, 2026-10-19). Full official proof GET /v1/sales-proof. Other API paid sales are unverified."
   };
   return {spec,wellKnown};
