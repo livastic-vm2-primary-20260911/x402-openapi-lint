@@ -1,4 +1,7 @@
 # VM5 x402 OpenAPI Lint — paid API pilot
+
+**New, live 2026-10-19: [0.005 Base USDC public-domain MX/SPF/DMARC configuration preflight](docs/EMAIL_DNS_PAID_PUBLIC_SERVICE_20261019.md)** — optional domain input, HTTP 402 on valid paid requests and HTTP 400/404/503 on invalid/unavailable DNS before payment. [Free synthetic preview](https://vm5-openapi-x402.onrender.com/v1/email-dns-sample). This new route has **zero independently proven paid orders**; do not confuse it with the two earlier NoHumans scout purchases.
+
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
 **Launch status 2026-10-19: TWO separate genuine paid x402 API deliveries totaling 0.015 native Base Circle USDC.** ONE independent NoHumans automated paid verification scout paid 0.010000 for the original OpenAPI template and a separate 0.005000 for the synthetic CSV quality report. They are TWO on-chain USDC transfers, NOT two organic paying human customers or recurring subscriptions. Fiat USD bank cashout remains 0, true post-cost profit unknown. [First template receipt](docs/FIRST_ACTUAL_PAID_SALE_20261019.md) and [second CSV receipt](docs/SECOND_ACTUAL_PAID_CSV_SALE_20261019.md) include source and Base transaction proof. All other routes have no proven paying buyers. Mock test payments never count.\n
