@@ -13,6 +13,7 @@ import {parseGlbBase64, MAX_GLB_BYTES} from "./glb-analyzer.mjs";
 import {generateOriginalGlb} from "./procedural-lowpoly-generator.mjs";
 import {inspectCsv,validateCsvInput,DEMO_CSV,CSV_LIMITS} from "./csv-preflight.mjs";
 import {parsePublicQuote,evaluatePublicQuote,EXAMPLE_QUOTE,VERSION as VM3_QUOTE_VERSION} from "./quote-preflight.mjs";
+import {validatePublicDomain,auditEmailDns} from "./email-dns-preflight.mjs";
 
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||8736);
@@ -82,6 +83,10 @@ const documentation={
     limitations:"Not full spreadsheet compliance, data truth, threat scanning or GDPR certification; do not submit secrets, infrastructure/settlement log separately."},
   paidCsvDemo:{method:"GET",path:"/v1/csv-report",priceUSDC:"0.005",network:NETWORK,
     purpose:"Deliver a full machine-readable integrity report of an original synthetic test CSV. No customer data, request inputs or special query; pays for structured ready-to-consume report, which can also be computed from disclosed public sample."},
+  paidEmailDns:{method:"GET",path:"/v1/email-dns-preflight",priceUSDC:"0.005",network:NETWORK,
+    purpose:"Public domain MX/SPF/DMARC DNS configuration preflight with read-only bounded lookups. No email addresses, SMTP, mailbox deliverability promise, DKIM selectors or security certification.",
+    input:"Optional public domain, default gmail.com. Preflight DNS health checked before an x402 quote; failed DNS lookup is not billed.",
+    freePreview:"GET /v1/email-dns-sample",confirmedIndependentCustomers:0},
   paidQuote:{method:"GET",path:"/v1/x402-preflight",priceUSDC:"0.01",network:NETWORK,
     purpose:"Offline-only public unsigned x402 v2 HTTP402 quote consistency review, adapted from original same-owner VM3 source. No live network fetch, merchant identity certification, wallet spend or settlement proof.",
     input:"One optional quote JSON or Base64 in query, max 12000 characters; omitted means a fake original public fixture",
@@ -136,6 +141,15 @@ const routes={
       inputSchema:{type:"object",additionalProperties:false,required:["csvText"],
         properties:{csvText:{type:"string",maxLength:32768},expectedColumns:{type:"array",items:{type:"string"},maxItems:40}}},
       output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"csv_structure_quality_preflight",dataRows:5,irregularRows:1,normalizedDuplicateRows:1,spreadsheetFormulaRiskCells:1}}
+    })
+  },
+  "GET /v1/email-dns-preflight":{
+    accepts:{scheme:"exact",price:"$0.005",network:NETWORK,payTo:PAY_TO},
+    description:"One bounded public MX/SPF/DMARC and A DNS configuration report. Optional domain query, defaults to gmail.com. No mailbox, SMTP, DKIM selector or inbox deliverability verification. Rejected invalid/unresolvable inputs not charged.",
+    mimeType:"application/json",
+    extensions:declareDiscoveryExtension({
+      method:"GET",
+      output:{example:{ok:true,paid:true,chargedUSDC:"0.005",kind:"public_email_dns_preflight",domain:"gmail.com",mxCount:5,spfPresent:true,dmarcPresent:true,rawEmailAddressesReceived:false,smtpContactAttempted:false}}
     })
   },
   "GET /v1/x402-preflight":{
@@ -208,7 +222,7 @@ const app=express();
 app.set("trust proxy", BIND_HOST==="0.0.0.0" ? 1 : "loopback"); // Render HTTPS reverse proxy, or VM5 loopback tunnel
 app.disable("x-powered-by");
 const traffic=new Map();
-const MAX_REQUESTS_PER_MINUTE=90;
+const MAX_REQUESTS_PER_MINUTE=process.env.NODE_ENV==="test"?1000:90;
 let pendingChecks=0;
 app.use((req,res,next)=>{
   const raw=req.headers["cf-connecting-ip"];
@@ -244,6 +258,12 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 });
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
+app.get("/v1/email-dns-sample",(_req,res)=>res.status(200).json({
+  ok:true,paid:false,chargedUSDC:"0",exampleOnly:true,
+  sample:{kind:"public_email_dns_preflight",domain:"example.org",mxCount:1,spfPresent:true,dmarcPresent:true,dmarcPolicy:"reject",warnings:[],inspectedAtUTC:"FIXTURE_ONLY_NOT_LIVE_DNS"},
+  paidEndpoint:"GET /v1/email-dns-preflight?domain=gmail.com",priceUSDC:"0.005",confirmedIndependentCustomers:0,
+  caveat:"A synthetic fixture, not an actual DNS inspection or paid buyer order. Paid endpoint queries live public DNS MX, SPF and DMARC but cannot verify email deliverability, mailbox existence, DKIM selectors or security."
+}));
 app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
   kind:"original_x402_first_actual_independent_paid_sale",
   source:"NoHumans firstparty paid_verified/paid_verification_latest and independent Base8453 USDC receipt; evidence frozen at 2026-10-19, not live sales analytics.",
@@ -398,6 +418,30 @@ app.get(["/.well-known/x402","/.well-known/x402.json"],(req,res)=>{
 
 app.options(["/v1/lint","/v1/analyze-glb","/v1/csv-preflight"],(_req,res)=>res.status(204).end());
 
+const emailDnsRates=new Map();
+app.get("/v1/email-dns-preflight",async(req,res,next)=>{
+  const now=Date.now(),ip=req.ip,previous=emailDnsRates.get(ip);
+  const item=(!previous||now-previous.at>60000)?{at:now,count:0}:previous;
+  item.count++;emailDnsRates.set(ip,item);
+  if(emailDnsRates.size>3000)for(const [key,state] of emailDnsRates)if(now-state.at>60000)emailDnsRates.delete(key);
+  if(item.count>12)return res.status(429).json({ok:false,charged:false,error:"Public DNS lookup limited to twelve attempts/minute/IP."});
+  const keys=Object.keys(req.query);
+  if(keys.length>1||keys.some(key=>key!=="domain")||keys.some(key=>typeof req.query[key]!=="string"))
+    return res.status(400).json({ok:false,charged:false,error:"Only an optional single public domain query is permitted."});
+  const input=validatePublicDomain(req.query.domain===undefined?"gmail.com":req.query.domain);
+  if(!input.ok)return res.status(400).json({ok:false,charged:false,error:input.error});
+  try{
+    const report=await auditEmailDns(input.domain);
+    if(!report.ok)return res.status(404).json({ok:false,charged:false,error:report.error});
+    res.locals.emailDnsReport=report;
+    return next();
+  }catch{
+    return res.status(503).json({ok:false,charged:false,error:"Public DNS resolver is unavailable. No payment requested."});
+  }
+},payment,(_req,res)=>res.status(200).json({
+  ...res.locals.emailDnsReport,paid:true,chargedUSDC:"0.005",network:NETWORK,
+  disclaimer:"Read-only public DNS configuration preflight, not domain ownership, SMTP deliverability, DKIM, authorization or security certification. DNS results may change."
+}));
 app.get("/v1/x402-sample",(_req,res)=>res.status(200).json({
   ok:true,paid:false,chargedUSDC:"0",sampleOnly:true,
   version:VM3_QUOTE_VERSION,
