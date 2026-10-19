@@ -1,0 +1,56 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {makeDiscovery} from "../discovery.mjs";
+const BASE=process.env.TEST_URL||"http://127.0.0.1:8736";
+const TX="0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912";
+const EXPECTED_TOKEN="0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+test("First actual independent x402 buyer sale source is free, exact onchain buyer and 0.01 USDC",async()=>{
+ const r=await fetch(BASE+"/v1/sales-proof");
+ assert.equal(r.status,200);
+ assert.equal(r.headers.get("PAYMENT-REQUIRED"),null);
+ const o=await r.json();
+ assert.equal(o.kind,"original_x402_first_actual_independent_paid_sale");
+ assert.equal(o.txHash,TX);
+ assert.equal(o.logIndex,239);
+ assert.equal(o.chainId,8453);
+ assert.equal(o.USDCAsset,EXPECTED_TOKEN);
+ assert.equal(o.recipientPublicAddress.toLowerCase(),"0x6b01efa0705e91a7aca54271510bf9e594717f34");
+ assert.equal(o.independentBuyerPublicScout.toLowerCase(),"0x54e163e9b8edda194d83f46add921bfa5fc5f4e0");
+ assert.equal(o.nativeCircleBaseUSDCReceived,"0.01");
+ assert.equal(o.verifiedUniquePaidCalls,1);
+ assert.equal(o.exactPaidProduct,"GET /v1/x402-template");
+ assert.equal(o.paidVerified,true);
+ assert.equal(o.officialProductDelivered,true);
+ assert.equal(o.responseSchemaValidated,true);
+ assert.ok(o.externalSellerListing.endsWith("7fb76f81-0b5"));
+});
+test("Never accidentally claim 3D generator sales or fiat cashout based on template purchase",async()=>{
+ const r=await fetch(BASE+"/v1/sales-proof");
+ const o=await r.json();
+ assert.equal(o.generatedLowPolyPaidCustomers,0);
+ assert.equal(o.paidGlbAuditorPaidCustomers,0);
+ assert.equal(o.otherPaidEndpointCustomersNotProven,true);
+ assert.equal(o.fiatCashoutUSD,"0");
+ assert.equal(o.trueNetUSD,"UNKNOWN");
+ assert.equal(o.noOwnerWalletGasOrSignedSelfPurchase,true);
+ assert.ok(o.disclaimer.includes("not an enterprise software contract"));
+});
+test("Public seller docs show first documented paid template sale but do not add fake testimonials",async()=>{
+ const r=await fetch(BASE+"/v1/docs");
+ assert.equal(r.status,200);
+ const d=await r.json();
+ assert.ok(d.status.includes("0.01"));
+ assert.equal(d.firstVerifiedIndependentPaidSale.distinctDeliveredPurchases,1);
+ assert.equal(d.firstVerifiedIndependentPaidSale.fiatCashoutUSD,"0");
+ assert.equal(d.firstVerifiedIndependentPaidSale.endpoint,"GET /v1/x402-template");
+ assert.ok(d.disclosure.includes("Other route sales unverified"));
+});
+test("OpenAPI lists non-payable reproducible receipt proof while retaining five paid resources",()=>{
+ const d=makeDiscovery("https://vm5-openapi-x402.onrender.com");
+ const route=d.spec.paths["/v1/sales-proof"];
+ assert.ok(route?.get);
+ assert.deepEqual(route.get.security,[]);
+ assert.equal(d.wellKnown.resources.length,5);
+ assert.equal(d.spec["x-discovery"].settlementTestStatus,"ONE_REAL_EXTERNAL_001_USDC_TEMPLATE_PAID_AND_DELIVERED_OCT19");
+ assert.ok(d.wellKnown.claim.includes("separately settled"));
+});

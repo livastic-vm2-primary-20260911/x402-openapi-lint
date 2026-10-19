@@ -47,6 +47,12 @@ export function makeDiscovery(origin) {
       "/v1/docs":{get:{summary:"Free API documentation and payment terms",operationId:"readApiContract",security:[],responses:{"200":{description:"Public terms, recipient and schema."}}}},
       "/v1/sample":{get:{summary:"Free, full reference lint report",operationId:"sampleLint",security:[],responses:{"200":{description:"Public independently verified example."}}}},
       "/v1/glb-sample":{get:{summary:"Free original self-produced 3D model metadata preview",operationId:"readGlbMetadataSample",security:[],responses:{"200":{description:"Not a paid customer job; public sample with private source retained."}}}},
+      "/v1/sales-proof":{get:{
+        summary:"Free, independently verifiable first real Base USDC buyer purchase receipt (not fiat)",
+        operationId:"originalFirstIndependentPaidX402SaleProof",security:[],
+        description:"One actual NoHumans external scout 0.01 native Base USDC paid and delivered GET /v1/x402-template on Oct19 2026. Hash, recipient, official NoHumans and Basescan sources. As-of historic first sale, not live sales volume. Other endpoints not yet verified.",
+        responses:{"200":{description:"Original paid verification receipt with onchain and external firstparty sources; no payment required."}}
+      }},
       "/v1/lowpoly-sample":{get:{summary:"Free reproducible 3D game prop offer, procedural source disclosed",operationId:"readLowpolyGeneratorOffer",security:[],responses:{"200":{description:"No-purchase disclosure of actual lowpoly hosted generator product, 0 buyer payments."}}}},
       "/v1/base-usdc-receipt":{get:{
         summary:"Verify Base Circle USDC transaction receipt for 0.005 USDC",
@@ -136,13 +142,13 @@ export function makeDiscovery(origin) {
         }
       }
     },
-    "x-discovery":{provider:"VM5 Delivery Lab",productUrl:"https://livastic-vm5-primary-20260911.github.io/x402-openapi-lint/",settlementTestStatus:"untested"}
+    "x-discovery":{provider:"VM5 Delivery Lab",productUrl:"https://livastic-vm5-primary-20260911.github.io/x402-openapi-lint/",settlementTestStatus:"ONE_REAL_EXTERNAL_001_USDC_TEMPLATE_PAID_AND_DELIVERED_OCT19","independentSource":"https://nohumans.directory/l/7fb76f81-0b5","readOnlySaleProof":"https://vm5-openapi-x402.onrender.com/v1/sales-proof"}
   };
   const wellKnown={
     version:1,
     resources:[endpoint,templateEndpoint,receiptEndpoint,glbEndpoint,lowpolyEndpoint],
     instructions:"Paid GET /v1/generate-lowpoly generates an AI-assisted as-is non-exclusive original GLB binary for 0.05 Base Circle USDC, default lantern seed0. POST /v1/analyze-glb reviews GLB metadata for 0.01USDC. GET /v1/x402-template serves an API starter 0.01USDC, POST /v1/lint analyzes OpenAPI 0.01USDC, GET /v1/base-usdc-receipt verifies a public Base native Circle USDC Transfer 0.005USDC. Inputs validated before any charge. GET /v1/lowpoly-sample and /v1/glb-sample free. AI-assisted source public, no exclusive IP claim. No actual independent settled sales yet.",
-    claim:"discovered x402 quote only, not an observed settled payment"
+    claim:"Discovery is NOT payment; one independent 0.01 Base native Circle USDC x402 template purchase was separately settled and delivered (NoHumans scout, 2026-10-19). Full official proof GET /v1/sales-proof. Other API paid sales are unverified."
   };
   return {spec,wellKnown};
 }

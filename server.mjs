@@ -42,7 +42,7 @@ await resourceServer.initialize(); // Read facilitator /supported before accepti
 const documentation={
   name:"VM5 OpenAPI Lint",
   version:"0.1.0",
-  status:"pilot — x402 settlement not yet exercised with a real payment",
+  status:"LIVE — first independent 0.01 native Base Circle USDC purchase, delivered and externally verified on 2026-10-19 (NoHumans scout only); other endpoints not proven paid",
   paid:{
     method:"POST",
     path:"/v1/lint",
@@ -90,7 +90,8 @@ const documentation={
   },
   scope:"Redocly recommended schema/documentation lint, no external $ref, no runtime server access, not a security certification",
   privacy:"Submitted specs are held in memory/temp files only for request processing, deleted after each run; no telemetry or access logging in application code. Cloudflare and the facilitator are separate external services; avoid secrets and client data.",
-  disclosure:"VM5 is an AI-assisted seller. We do not claim settled payments or buyer reviews before verifying receipts."
+  disclosure:"VM5 AI-assisted one-owner API. Exactly one NoHumans independent 0.01 native Base Circle USDC paid and delivered template call verified 2026-10-19; not proof of further customers or repeat demand. Other route sales unverified. No owner fiat cashout or net profit established.",
+  firstVerifiedIndependentPaidSale:{endpoint:"GET /v1/x402-template",amountNativeBaseCircleUSDC:"0.01",distinctDeliveredPurchases:1,fiatCashoutUSD:"0",onchain:"https://basescan.org/tx/0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",officialIndependentProof:"https://nohumans.directory/l/7fb76f81-0b5"}
 };
 const routes={
   "GET /v1/generate-lowpoly":{
@@ -187,6 +188,29 @@ app.get("/.well-known/402index-verify.txt",(_req,res)=>{
 });
 app.get("/health",(_req,res)=>res.json({ok:true,service:"vm5-openapi-x402",network:NETWORK,paidRoute:"POST /v1/lint",sampleRedoclyErrors:sampleReport.errors}));
 app.get("/v1/docs",(_req,res)=>res.json(documentation));
+app.get("/v1/sales-proof",(_req,res)=>res.status(200).json({
+  kind:"original_x402_first_actual_independent_paid_sale",
+  source:"NoHumans firstparty paid_verified/paid_verification_latest and independent Base8453 USDC receipt; evidence frozen at 2026-10-19, not live sales analytics.",
+  externalBuyer:"NoHumans independent paid-verification scout",
+  externalSellerListing:"https://nohumans.directory/l/7fb76f81-0b5",
+  exactPaidProduct:"GET /v1/x402-template",
+  nativeCircleBaseUSDCReceived:"0.01", verifiedUniquePaidCalls:1,
+  paidVerified:true,officialProductDelivered:true,responseSchemaValidated:true,
+  dateUTC:"2026-10-19T11:34:15Z",chainId:8453,
+  USDCAsset:"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  recipientPublicAddress:PAY_TO,
+  independentBuyerPublicScout:"0x54E163e9B8eDDa194D83F46AdD921bfA5fc5f4E0",
+  txHash:"0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",
+  logIndex:239,
+  transactionExplorer:"https://basescan.org/tx/0x5ced9d7d47a864b62afd408d785e0cf7a6b0cc862a6940630ee9283ce18be912",
+  officialBuyerPolicy:"https://nohumans.directory/state/paid-verification",
+  noOwnerWalletGasOrSignedSelfPurchase:true,
+  generatedLowPolyPaidCustomers:0,
+  paidGlbAuditorPaidCustomers:0,
+  otherPaidEndpointCustomersNotProven:true,
+  fiatCashoutUSD:"0",trueNetUSD:"UNKNOWN",
+  disclaimer:"One small independently purchased and delivered API template; not an enterprise software contract, verified client testimonial, exclusive IP transfer, sustained demand, USD bank deposit or guaranteed future revenue."
+}));
 app.get("/v1/sample",(_req,res)=>res.json({kind:"public_sample",sampleTitle:"Independently authored JSONPlaceholder OpenAPI 3.0 spec",...sampleReport,paid:false,source:"https://github.com/livastic-vm5-primary-20260911/vm5-delivery-lab/tree/main/examples"}));
 app.get("/v1/lowpoly-sample",(_req,res)=>res.json({
   ok:true,paid:false,kind:"reproducible_original_lowpoly_glb_generator_preview",
@@ -340,7 +364,7 @@ app.post("/v1/analyze-glb",
   payment,
   (_req,res)=>res.status(200).json({...res.locals.glbReport,kind:"glb_v2_geometry_audit",
     paid:true,chargedUSDC:"0.01",network:NETWORK,
-    disclosure:"x402 payment requires the sender's own signed authorization and facilitator settlement. Prior to any real outside purchase, owner revenue remains ZERO."})
+    disclosure:"x402 requires an independent signed buyer authorization and actual settlement. This GLB metadata endpoint itself has ZERO verified paid calls as of first-sale proof; a DIFFERENT template GET endpoint sold once externally for 0.01 native Base USDC in Oct 2026. No GLB upload customer sale is claimed."})
 );
 
 app.post("/v1/lint",express.json({limit:"85kb",type:["application/json","application/*+json"]}),(req,res,next)=>{

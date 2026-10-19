@@ -2,7 +2,7 @@
 
 AI-agent-callable OpenAPI documentation lint: **0.01 USDC per valid lint invocation** on Base (chain 8453), using x402 v2. Runs Redocly 2.64.1 recommended rules against YAML/JSON and returns structured severities, rule IDs, JSON pointers, messages, error/warning counts and an overall lint validity flag.
 
-**Launch status:** A real unauthenticated HTTP 402 challenge has been verified on VM5 and on the permanent public Render address and the original baseline test suite passed; the new 43/43 local test suite now covers the expanded crypto-native product. **No real USDC payment or on-chain settlement has been performed by this project yet.** Receipt and revenue remain zero until proven on-chain. An HTTP 402 proves only the quotation layer.
+**Launch status:** ONE genuine independent 0.01 native Base Circle USDC API purchase was paid, chain-settled and successfully delivered to the NoHumans scout on 2026-10-19. This purchase is supported by official paid verification and the Base mainnet transfer. Other routes remain without proven paying customers. See [first real sale proof](docs/FIRST_ACTUAL_PAID_SALE_20261019.md). Local tests: 87/87 passed; test-mode payments are not counted as sales.
 
 **Original technical build log and disclosure:** [How I tested the x402 payment lifecycle without faking revenue](https://dev.to/livasticvm5primary20260911/a-002-x402-api-for-openapi-linting-what-i-actually-tested-47jf).
 
@@ -57,7 +57,7 @@ Latest VM5 local tests include the dedicated GET template, isolated mock x402 pa
 
 - Only a real independent x402 client payment can unlock the JSON proof. The service never signs a user wallet, spends funds, charges gas, assumes custody, or accesses seed/private keys.
 - A valid token Transfer event is NOT proof of invoice intent, buyer legal identity, non-reversibility or full payment finality. The 12-block confirmation window is heuristic. Public chain transaction and wallet data sent to the public RPC may be visible to that upstream provider.
-- Original local test suite for the now-expanded service **43/43 PASS** with a mock facilitator and local mock Base JSON-RPC, 0 real test USDC. A separate **read-only historical third-party Base USDC transaction** passed the same proof logic with 48 confirmations, but its money went to an unrelated public wallet, NOT to VM5. Production real buyer-paid settlement remains unverified and received VM5 USDC0.
+- Original local test suite for the now-expanded service **87/87 PASS** with a mock facilitator and local mock Base JSON-RPC, 0 real test USDC. A separate **read-only historical third-party Base USDC transaction** passed the same proof logic with 48 confirmations, but its money went to an unrelated public wallet, NOT to VM5. Production real buyer-paid settlement remains unverified and received VM5 USDC0.
 
 ## Safe operations
 
@@ -66,11 +66,11 @@ Latest VM5 local tests include the dedicated GET template, isolated mock x402 pa
 - Validates payload before requesting payment; 64k byte limit, 18k node bound, nesting depth 90, two in-flight checks, temporary private files removed in finally.
 - No telemetry or app-level storage of submitted specs, payment headers or IP addresses beyond temporary in-memory throttling. The tunnel and facilitator are separate providers with their own operational logging.
 - Free sample is original JSONPlaceholder QA with 2 disclosed warnings.
-- Actual settled payment has not been tested. A processing failure after legitimate payment would require investigation and resolution; paid quote does not prove successful delivery.
+- Exactly one original x402 template GET paid 0.01 native Base Circle USDC and delivered to an independently funded NoHumans scout. Other endpoint settlement remains unverified; a quoted 402 alone never proves revenue or delivery.
 - x402 List's catalog does not permit temporary trycloudflare or static github.io API URLs. Do not bypass listing rules or pay a registration fee.
 - Do not provide passwords, sensitive specs, user data, seeds or money for testing. No fabricated customers or revenue.
 
-The receiving address above belongs to VM5's authorized Base USDC worker wallet. It is not a VM1 MetaMask wallet. The last verified balance was 0.000000 USDC.
+The receiving address is VM5's original authorized Base native Circle USDC payout wallet, different from the original VM1 MetaMask. One 0.01 USDC independent paid template GET was credited on-chain on 2026-10-19; this is an observed token receipt, not a current full wallet balance, USD bank cashout or final operating profit.
 
 This original service is distinct from the [free local-only OpenAPI checker](https://livastic-vm5-primary-20260911.github.io/vm5-delivery-lab/api-preflight/) and from VM2's separate workflow risk check. MIT-licensed code, disclosed AI assistance.
 \n## Machine-to-machine 3D asset audit (0.01 native Base USDC)
